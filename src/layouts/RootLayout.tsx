@@ -1,30 +1,16 @@
-import { Outlet } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthProvider';
+import { Outlet } from 'react-router-dom'
+import Navbar from '@/components/shared/Navbar'
+import Footer from '@/components/shared/Footer'
 
 export default function RootLayout() {
-  const { logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-primary text-primary-foreground py-4">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Etkinlik Platformu</h1>
-          <button
-            onClick={logout}
-            className="text-sm text-primary-foreground hover:underline"
-          >
-            Çıkış Yap
-          </button>
-        </div>
-      </header>
-      <main className="container mx-auto px-4 py-8">
+    <div className="flex flex-col min-h-screen bg-background">
+      <Navbar />
+      <main className="flex-grow container mx-auto px-4 py-8 pt-20">
         <Outlet />
       </main>
-      <footer className="bg-secondary text-secondary-foreground py-4 mt-8">
-        <div className="container mx-auto px-4 text-center">
-          <p>&copy; 2023 Etkinlik Platformu. Tüm hakları saklıdır.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
-  );
+  )
 }
