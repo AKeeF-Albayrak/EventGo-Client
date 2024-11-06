@@ -1,26 +1,53 @@
-'use client';
-
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import LoginForm from './LoginForm';
-import RegisterForm from './RegisterForm';
-import ResetPasswordForm from './ResetPasswordForm';
-import { containerVariants, itemVariants } from '@/lib/animations';
-import { useAuth } from '@/contexts/AuthProvider';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import LoginForm from './LoginForm'
+import RegisterForm from './RegisterForm'
+import ResetPasswordForm from './ResetPasswordForm'
+import { containerVariants, itemVariants } from '@/lib/animations'
+import { useAuth } from '@/contexts/AuthContext'
+import { toast } from 'react-toastify'
+import axiosInstance from '@/services/api'
 
 export default function AuthPage() {
-  const [activeTab, setActiveTab] = useState('login');
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('login')
+  const navigate = useNavigate()
+  const { login, register } = useAuth()
 
-  const handleLogin = (token: string) => {
-    login(token);
-    navigate('/dashboard');
-  };
+  const handleLogin = async (username: string, password: string) => {
+    try {
+      await login(username, password)
+      toast.success('Giriş başarılı!')
+      navigate('/dashboard')
+    } catch (error) {
+      console.error('Giriş başarısız:', error)
+      toast.error('Giriş başarısız. Lütfen bilgilerinizi kontrol edin.')
+    }
+  }
+
+  const handleRegister = async (userData: any) => {
+    try {
+      await register(userData)
+      toast.success('Kayıt başarılı!')
+      navigate('/dashboard')
+    } catch (error) {
+      console.error('Kayıt başarısız:', error)
+      toast.error('Kayıt başarısız. Lütfen bilgilerinizi kontrol edin.')
+    }
+  }
+
+  const handleResetPassword = async (email: string) => {
+    try {
+      await axiosInstance.post('/Auth/ResetPassword', { email })
+      toast.success('Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.')
+    } catch (error) {
+      console.error('Şifre sıfırlama başarısız:', error)
+      toast.error('Şifre sıfırlama başarısız. Lütfen e-posta adresinizi kontrol edin.')
+    }
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
@@ -38,7 +65,7 @@ export default function AuthPage() {
               <TabsTrigger value="register">Kayıt</TabsTrigger>
               <TabsTrigger value="reset">Şifre Sıfırlama</TabsTrigger>
             </TabsList>
-            <AnimatePresence mode="sync">
+            <AnimatePresence mode="wait">
               {activeTab === 'login' && (
                 <motion.div
                   key="login"
@@ -61,7 +88,7 @@ export default function AuthPage() {
                   exit="exit"
                 >
                   <TabsContent value="register">
-                    <RegisterForm itemVariants={itemVariants} onRegister={handleLogin} />
+                    <RegisterForm itemVariants={itemVariants} onRegister={handleRegister} />
                   </TabsContent>
                 </motion.div>
               )}
@@ -74,7 +101,7 @@ export default function AuthPage() {
                   exit="exit"
                 >
                   <TabsContent value="reset">
-                    <ResetPasswordForm itemVariants={itemVariants} />
+                    <ResetPasswordForm itemVariants={itemVariants} onResetPassword={handleResetPassword} />
                   </TabsContent>
                 </motion.div>
               )}
@@ -99,5 +126,5 @@ export default function AuthPage() {
         </CardFooter>
       </Card>
     </div>
-  );
+  )
 }

@@ -1,32 +1,38 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Eye, EyeOff } from 'lucide-react'
 
 interface LoginFormProps {
-  itemVariants: any;
-  onLogin: (token: string) => void;
+  itemVariants: any
+  onLogin: (username: string, password: string) => void
 }
 
 export default function LoginForm({ itemVariants, onLogin }: LoginFormProps) {
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Burada gerçek bir API çağrısı yapılmalı
-    onLogin('fake-token');
-  };
+    e.preventDefault()
+    onLogin(username, password)
+  }
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
       <motion.div variants={itemVariants} className="space-y-2">
         <Label htmlFor="login-username">Kullanıcı Adı</Label>
-        <Input id="login-username" required />
+        <Input 
+          id="login-username" 
+          value={username} 
+          onChange={(e) => setUsername(e.target.value)} 
+          required 
+        />
       </motion.div>
       <motion.div variants={itemVariants} className="space-y-2">
         <Label htmlFor="login-password">Şifre</Label>
@@ -34,6 +40,8 @@ export default function LoginForm({ itemVariants, onLogin }: LoginFormProps) {
           <Input
             id="login-password"
             type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
           <Button
@@ -55,5 +63,5 @@ export default function LoginForm({ itemVariants, onLogin }: LoginFormProps) {
         <Button type="submit" className="w-full">Giriş Yap</Button>
       </motion.div>
     </form>
-  );
+  )
 }

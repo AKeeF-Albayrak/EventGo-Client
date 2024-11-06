@@ -1,7 +1,7 @@
-import * as React from 'react';
-import { Link } from 'react-router-dom';
-import { Bell, Calendar, LogOut, Settings, Star, MessageSquare, Home, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import * as React from 'react'
+import { Link } from 'react-router-dom'
+import { Bell, Calendar, Settings, Star, MessageSquare, Home, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,21 +9,21 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthProvider';
+} from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+//Burada yönetim kolaylığı açısından her bir navbar öğesini ayrı bir sayfaya taşımak nasıl bir fikir, 
+//örneğin NavbarHome, NavbarCreateEvent, NavbarCityEvents gibi
 
 export default function Navbar() {
-  const [notifications, setNotifications] = React.useState(2);
-  const { user, logout } = useAuth();
+  const [notifications, setNotifications] = React.useState(2)
 
   // Navbar items
   const navItems = [
     { to: '/dashboard', icon: Home, label: 'Anasayfa' },
     { to: '/create-event', icon: Plus, label: 'Etkinlik Oluştur' },
     { to: '/city-events', icon: Star, label: 'Şehrimdeki Etkinlikler' },
-  ];
+  ]
 
   return (
     <nav className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -86,18 +86,18 @@ export default function Navbar() {
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
                   <AvatarImage
-                    src={user?.avatarUrl || '/placeholder.svg'}
-                    alt={user?.name || 'User'}
+                    src="/placeholder.svg"
+                    alt="User"
                   />
-                  <AvatarFallback>{user?.name?.[0] || 'U'}</AvatarFallback>
+                  <AvatarFallback>U</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{user?.name || 'Kullanıcı Adı'}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email || 'user@example.com'}</p>
+                  <p className="text-sm font-medium">Kullanıcı Adı</p>
+                  <p className="text-xs text-muted-foreground">user@example.com</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -133,15 +133,10 @@ export default function Navbar() {
                   Geri Bildirim Gönder
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} className="text-red-600">
-                <LogOut className="mr-2 h-4 w-4" />
-                Çıkış Yap
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
     </nav>
-  );
+  )
 }

@@ -1,68 +1,115 @@
-'use client';
-
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Eye, EyeOff } from 'lucide-react'
 
 interface RegisterFormProps {
-  itemVariants: any;
-  onRegister: (token: string) => void;
+  itemVariants: any
+  onRegister: (userData: any) => Promise<void>
 }
 
 export default function RegisterForm({ itemVariants, onRegister }: RegisterFormProps) {
-  const [showPassword, setShowPassword] = useState(false);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false)
+  const [formData, setFormData] = useState({
+    username: '',
+    passwordHash: '',
+    email: '',
+    address: '',
+    city: '',
+    country: '',
+    latitude: 0,
+    longitude: 0,
+    interests: '',
+    name: '',
+    surname: '',
+    birthDate: '',
+    gender: '',
+    phoneNumber: '',
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      await onRegister(formData)
+    } catch (error) {
+      console.error('Kayıt başarısız:', error)
+    } finally {
+      setIsSubmitting(false)
     }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Burada gerçek bir API çağrısı yapılmalı
-    onRegister('fake-token');
-  };
+  }
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
-      <motion.div variants={itemVariants} className="grid sm:grid-cols-2 gap-4">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="register-firstname">Ad</Label>
-          <Input id="register-firstname" required />
+          <Label htmlFor="name">Ad</Label>
+          <Input
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            required
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="register-lastname">Soyad</Label>
-          <Input id="register-lastname" required />
+          <Label htmlFor="surname">Soyad</Label>
+          <Input
+            id="surname"
+            name="surname"
+            value={formData.surname}
+            onChange={handleInputChange}
+            required
+          />
         </div>
       </motion.div>
+
       <motion.div variants={itemVariants} className="space-y-2">
-        <Label htmlFor="register-username">Kullanıcı Adı</Label>
-        <Input id="register-username" required />
+        <Label htmlFor="username">Kullanıcı Adı</Label>
+        <Input
+          id="username"
+          name="username"
+          value={formData.username}
+          onChange={handleInputChange}
+          required
+        />
       </motion.div>
+
       <motion.div variants={itemVariants} className="space-y-2">
-        <Label htmlFor="register-email">E-posta</Label>
-        <Input id="register-email" type="email" required />
+        <Label htmlFor="email">E-posta</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleInputChange}
+          required
+        />
       </motion.div>
+
       <motion.div variants={itemVariants} className="space-y-2">
-        <Label htmlFor="register-password">Şifre</Label>
+        <Label htmlFor="passwordHash">Şifre</Label>
         <div className="relative">
           <Input
-            id="register-password"
+            id="passwordHash"
+            name="passwordHash"
             type={showPassword ? "text" : "password"}
+            value={formData.passwordHash}
+            onChange={handleInputChange}
             required
           />
           <Button
@@ -76,15 +123,26 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
           </Button>
         </div>
       </motion.div>
-      <motion.div variants={itemVariants} className="grid sm:grid-cols-2 gap-4">
+
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="register-birthdate">Doğum Tarihi</Label>
-          <Input id="register-birthdate" type="date" required />
+          <Label htmlFor="birthDate">Doğum Tarihi</Label>
+          <Input
+            id="birthDate"
+            name="birthDate"
+            type="date"
+            value={formData.birthDate}
+            onChange={handleInputChange}
+            required
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="register-gender">Cinsiyet</Label>
-          <Select>
-            <SelectTrigger id="register-gender">
+          <Label htmlFor="gender">Cinsiyet</Label>
+          <Select
+            value={formData.gender}
+            onValueChange={(value) => handleSelectChange('gender', value)}
+          >
+            <SelectTrigger id="gender">
               <SelectValue placeholder="Cinsiyet seçin" />
             </SelectTrigger>
             <SelectContent>
@@ -95,36 +153,73 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
           </Select>
         </div>
       </motion.div>
+
       <motion.div variants={itemVariants} className="space-y-2">
-        <Label htmlFor="register-phone">Telefon Numarası</Label>
-        <Input id="register-phone" type="tel" />
+        <Label htmlFor="phoneNumber">Telefon Numarası</Label>
+        <Input
+          id="phoneNumber"
+          name="phoneNumber"
+          type="tel"
+          value={formData.phoneNumber}
+          onChange={handleInputChange}
+          required
+        />
       </motion.div>
+
       <motion.div variants={itemVariants} className="space-y-2">
-        <Label htmlFor="register-interests">İlgi Alanları</Label>
-        <Textarea id="register-interests" placeholder="İlgi alanlarınızı virgülle ayırarak yazın" />
+        <Label htmlFor="interests">İlgi Alanları</Label>
+        <Textarea
+          id="interests"
+          name="interests"
+          placeholder="İlgi alanlarınızı virgülle ayırarak yazın"
+          value={formData.interests}
+          onChange={handleInputChange}
+        />
       </motion.div>
+
       <motion.div variants={itemVariants} className="space-y-2">
-        <Label htmlFor="register-profile-image">Profil Fotoğrafı</Label>
-        <Input id="register-profile-image" type="file" accept="image/*" onChange={handleImageUpload} />
-        {profileImage && (
-          <Avatar className="w-24 h-24 mx-auto">
-            <AvatarImage src={profileImage} alt="Profil fotoğrafı" />
-            <AvatarFallback>PF</AvatarFallback>
-          </Avatar>
-        )}
+        <Label htmlFor="address">Adres</Label>
+        <Input
+          id="address"
+          name="address"
+          value={formData.address}
+          onChange={handleInputChange}
+          required
+        />
       </motion.div>
-      <motion.div variants={itemVariants} className="flex items-center space-x-2">
-        <Checkbox id="terms" required />
-        <Label htmlFor="terms">
-          <span>
-            <a href="#" className="text-primary hover:underline">Kullanım şartlarını</a> ve{' '}
-            <a href="#" className="text-primary hover:underline">gizlilik politikasını</a> kabul ediyorum
-          </span>
-        </Label>
+
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="city">Şehir</Label>
+          <Input
+            id="city"
+            name="city"
+            value={formData.city}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="country">Ülke</Label>
+          <Input
+            id="country"
+            name="country"
+            value={formData.country}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
       </motion.div>
+
       <motion.div variants={itemVariants}>
-        <Button type="submit" className="w-full">Kayıt Ol</Button>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Kaydediliyor...' : 'Kayıt Ol'}
+        </Button>
       </motion.div>
     </form>
-  );
+  )
 }

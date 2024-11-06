@@ -1,24 +1,54 @@
-'use client';
-
-import { motion } from 'framer-motion';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface ResetPasswordFormProps {
-  itemVariants: any;
+  itemVariants: any
+  onResetPassword: (email: string) => Promise<void>
 }
 
-export default function ResetPasswordForm({ itemVariants }: ResetPasswordFormProps) {
+export default function ResetPasswordForm({ itemVariants, onResetPassword }: ResetPasswordFormProps) {
+  const [email, setEmail] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      await onResetPassword(email)
+      setEmail('')
+    } catch (error) {
+      console.error('Şifre sıfırlama başarısız:', error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
-    <form className="space-y-6">
+    <form className="space-y-6" onSubmit={handleSubmit}>
       <motion.div variants={itemVariants} className="space-y-2">
         <Label htmlFor="reset-email">E-posta</Label>
-        <Input id="reset-email" type="email" required />
+        <Input 
+          id="reset-email" 
+          type="email" 
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="ornek@email.com"
+          required 
+          disabled={isSubmitting}
+        />
       </motion.div>
       <motion.div variants={itemVariants}>
-        <Button type="submit" className="w-full">Şifre Sıfırlama Bağlantısı Gönder</Button>
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Gönderiliyor...' : 'Şifre Sıfırlama Bağlantısı Gönder'}
+        </Button>
       </motion.div>
     </form>
-  );
+  )
 }

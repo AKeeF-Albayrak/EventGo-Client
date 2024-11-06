@@ -1,11 +1,13 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth, AuthProvider } from './contexts/AuthProvider';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import RootLayout from './layouts/RootLayout';
 import AuthLayout from './layouts/AuthLayout';
 import HomePage from './pages/HomePage';
 import AuthPage from './pages/auth/AuthPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
-import NotFoundPage from './pages/NotFoundPage'; // Hata Mesajı Sayfasını içe aktarın
+import NotFoundPage from './pages/NotFoundPage';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -48,7 +50,7 @@ function AppRoutes() {
       </Route>
 
       {/* 404 Not Found Route */}
-      <Route path="*" element={<NotFoundPage />} /> {/* Tüm diğer rotaları yakalar */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
@@ -57,6 +59,7 @@ export default function App() {
   return (
     <AuthProvider>
       <AppRoutes />
+      <ToastContainer />
     </AuthProvider>
   );
 }
