@@ -10,7 +10,7 @@ import ResetPasswordForm from './ResetPasswordForm'
 import { containerVariants, itemVariants } from '@/lib/animations'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'react-toastify'
-import axiosInstance from '@/services/api'
+import axiosInstance from '@/contexts/AxiosInstance'
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState('login')
@@ -65,7 +65,7 @@ export default function AuthPage() {
               <TabsTrigger value="register">Kayıt</TabsTrigger>
               <TabsTrigger value="reset">Şifre Sıfırlama</TabsTrigger>
             </TabsList>
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {activeTab === 'login' && (
                 <motion.div
                   key="login"

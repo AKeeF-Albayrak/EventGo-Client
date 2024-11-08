@@ -7,20 +7,31 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff } from 'lucide-react'
+import { ClipLoader } from 'react-spinners'
 
 interface LoginFormProps {
   itemVariants: any
-  onLogin: (username: string, password: string) => void
+  onLogin: (username: string, password: string) => Promise<void>
 }
 
 export default function LoginForm({ itemVariants, onLogin }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onLogin(username, password)
+    setIsLoading(true)
+    try {
+      // Yükleme durumunu simüle etmek için 2 saniye bekleyin
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      await onLogin(username, password)
+    } catch (error) {
+      console.error('Giriş başarısız:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -60,7 +71,16 @@ export default function LoginForm({ itemVariants, onLogin }: LoginFormProps) {
         <Label htmlFor="remember-me">Beni hatırla</Label>
       </motion.div>
       <motion.div variants={itemVariants}>
-        <Button type="submit" className="w-full">Giriş Yap</Button>
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <ClipLoader color="#1a365d" loading={isLoading} size={30} />
+              <span className="ml-2">Giriş Yapılıyor...</span>
+            </div>
+          ) : (
+            'Giriş Yap'
+          )}
+        </Button>
       </motion.div>
     </form>
   )

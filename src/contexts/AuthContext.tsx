@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import axiosInstance from '@/services/api'
+import axiosInstance from '@/contexts/AxiosInstance'
 
 interface AuthContextType {
   user: any | null

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ClipLoader } from 'react-spinners'
 
 interface ResetPasswordFormProps {
   itemVariants: any
@@ -11,18 +12,18 @@ interface ResetPasswordFormProps {
 
 export default function ResetPasswordForm({ itemVariants, onResetPassword }: ResetPasswordFormProps) {
   const [email, setEmail] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
+    setIsLoading(true)
     try {
       await onResetPassword(email)
       setEmail('')
     } catch (error) {
       console.error('Şifre sıfırlama başarısız:', error)
     } finally {
-      setIsSubmitting(false)
+      setIsLoading(false)
     }
   }
 
@@ -37,16 +38,20 @@ export default function ResetPasswordForm({ itemVariants, onResetPassword }: Res
           onChange={(e) => setEmail(e.target.value)}
           placeholder="ornek@email.com"
           required 
-          disabled={isSubmitting}
+          disabled={isLoading}
         />
       </motion.div>
       <motion.div variants={itemVariants}>
         <Button 
           type="submit" 
           className="w-full"
-          disabled={isSubmitting}
+          disabled={isLoading}
         >
-          {isSubmitting ? 'Gönderiliyor...' : 'Şifre Sıfırlama Bağlantısı Gönder'}
+          {isLoading ? (
+            <ClipLoader color="#ffffff" loading={isLoading} size={20} />
+          ) : (
+            'Şifre Sıfırlama Bağlantısı Gönder'
+          )}
         </Button>
       </motion.div>
     </form>
