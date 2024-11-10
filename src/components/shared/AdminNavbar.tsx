@@ -1,7 +1,7 @@
-import * as React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Bell, Calendar, Settings, Star, MessageSquare, Home, Plus, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import * as React from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Bell, Calendar, Settings, Users, FileText, Home, LogOut } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,55 +9,36 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
-import Swal from 'sweetalert2';
+} from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { useAuth } from '@/contexts/AuthContext'
 
-export default function Navbar() {
-  const [notifications, setNotifications] = React.useState(2);
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+export default function AdminNavbar() {
+  const [notifications, setNotifications] = React.useState(2)
+  const { logout } = useAuth()
+  const navigate = useNavigate()
 
-  // Navbar items
+  // Admin Navbar items
   const navItems = [
-    { to: '/home', icon: Home, label: 'Anasayfa' },
-    { to: '/create-event', icon: Plus, label: 'Etkinlik Oluştur' },
-    { to: '/city-events', icon: Star, label: 'Şehrimdeki Etkinlikler' },
-  ];
+    { to: '/admin/dashboard', icon: Home, label: 'Dashboard' },
+    { to: '/admin/users', icon: Users, label: 'Kullanıcı Yönetimi' },
+    { to: '/admin/events', icon: Calendar, label: 'Etkinlik Yönetimi' },
+  ]
 
   // Çıkış yapma işlevi
   const handleLogout = () => {
-    Swal.fire({
-      title: 'Çıkış yapmak istediğinize emin misiniz?',
-      text: "Oturumunuz sonlandırılacak.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Evet, çıkış yap',
-      cancelButtonText: 'İptal'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        logout();
-        navigate('/auth');
-        Swal.fire(
-          'Çıkış Yapıldı!',
-          'Başarıyla çıkış yaptınız.',
-          'success'
-        );
-      }
-    });
-  };
+    logout()
+    navigate('/auth') // Çıkıştan sonra giriş sayfasına yönlendirme
+  }
 
   return (
     <nav className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         {/* Logo Section */}
-        <Link to="/dashboard" className="mr-6 flex items-center space-x-2">
+        <Link to="/admin/dashboard" className="mr-6 flex items-center space-x-2">
           <Calendar className="h-6 w-6" />
-          <span className="hidden font-bold sm:inline-block">EventGo</span>
+          <span className="hidden font-bold sm:inline-block">EventGo Admin</span>
         </Link>
 
         {/* Navigation Items */}
@@ -98,10 +79,10 @@ export default function Navbar() {
               <DropdownMenuLabel>Bildirimler</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
-                <Link to="/events/1">Yeni yazılım etkinliği bildirimi</Link>
+                <Link to="/admin/events">Yeni etkinlik onay bekliyor</Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Link to="/events/2">Yeni spor etkinliği bildirimi</Link>
+                <Link to="/admin/users">Yeni kullanıcı kaydı</Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -113,50 +94,26 @@ export default function Navbar() {
                 <Avatar className="h-8 w-8">
                   <AvatarImage
                     src="/placeholder.svg"
-                    alt="User"
+                    alt="Admin"
                   />
-                  <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
+                  <AvatarFallback>A</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{user?.name || 'Kullanıcı Adı'}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email || 'user@example.com'}</p>
+                  <p className="text-sm font-medium">Admin</p>
+                  <p className="text-xs text-muted-foreground">admin@example.com</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
 
               {/* Menu Items */}
               <DropdownMenuItem asChild>
-                <Link to="/profile/events">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Katıldığım Etkinlikler
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/profile/my-events">
-                  <Star className="mr-2 h-4 w-4" />
-                  Oluşturduğum Etkinlikler
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/profile/points">
-                  <Star className="mr-2 h-4 w-4" />
-                  Puan Geçmişi
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/profile/settings">
+                <Link to="/admin/settings">
                   <Settings className="mr-2 h-4 w-4" />
-                  Ayarlar
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/feedback">
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  Geri Bildirim Gönder
+                  Admin Ayarları
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -171,5 +128,5 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
-  );
+  )
 }

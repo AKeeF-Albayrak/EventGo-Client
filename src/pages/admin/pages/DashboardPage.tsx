@@ -1,4 +1,4 @@
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const DashboardPage = () => {
   const { user } = useAuth();
@@ -6,7 +6,7 @@ const DashboardPage = () => {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-4">Kontrol Paneli</h1>
-      <p className="text-lg mb-4">Merhaba, {user?.name || 'Kullanıcı'}! Bu EventGo uygulamasının kontrol panelidir.</p>
+      <p className="text-lg mb-4">Merhaba, {user?.name || 'Kullanıcı'}! Bu EventGo uygulamasının kontrol panelidir.Sel {user?.role}</p>
       {/* Add dashboard content here */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-lg shadow">

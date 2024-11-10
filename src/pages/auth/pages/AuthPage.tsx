@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import LoginForm from './LoginForm'
-import RegisterForm from './RegisterForm'
-import ResetPasswordForm from './ResetPasswordForm'
+import LoginForm from '../forms/LoginForm'
+import RegisterForm from '../forms/RegisterForm'
+import ResetPasswordForm from '../forms/ResetPasswordForm'
 import { containerVariants, itemVariants } from '@/lib/animations'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'react-toastify'
@@ -19,25 +19,32 @@ export default function AuthPage() {
 
   const handleLogin = async (username: string, password: string) => {
     try {
-      await login(username, password)
-      toast.success('Giriş başarılı!')
-      navigate('/dashboard')
+      const user = await login(username, password); // `user` now has type `User`
+      toast.success('Giriş başarılı!');
+  
+      // Redirect based on user role
+      if (user.role === 1) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/home');
+      }
     } catch (error) {
-      console.error('Giriş başarısız:', error)
-      toast.error('Giriş başarısız. Lütfen bilgilerinizi kontrol edin.')
+      console.error('Giriş başarısız:', error);
+      toast.error('Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
     }
-  }
+  };
 
   const handleRegister = async (userData: any) => {
     try {
-      await register(userData)
+      const user = await register(userData)
       toast.success('Kayıt başarılı!')
-      navigate('/dashboard')
+      // Redirect based on user role (assuming new registrations are always regular users)
+      navigate('/home')
     } catch (error) {
       console.error('Kayıt başarısız:', error)
       toast.error('Kayıt başarısız. Lütfen bilgilerinizi kontrol edin.')
     }
-  }
+  };
 
   const handleResetPassword = async (email: string) => {
     try {
@@ -47,13 +54,13 @@ export default function AuthPage() {
       console.error('Şifre sıfırlama başarısız:', error)
       toast.error('Şifre sıfırlama başarısız. Lütfen e-posta adresinizi kontrol edin.')
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold text-center">Etkinlik Platformu</CardTitle>
+          <CardTitle className="text-3xl font-bold text-center">EventGo</CardTitle>
           <CardDescription className="text-center text-lg">
             Giriş yapın, kayıt olun veya şifrenizi sıfırlayın
           </CardDescription>

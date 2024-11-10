@@ -10,6 +10,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { ClipLoader } from 'react-spinners'
 import { Badge } from "@/components/ui/badge"
 import { X } from "lucide-react"
+import { useLoadScript, GoogleMap, Marker } from '@react-google-maps/api'
 
 interface RegisterFormProps {
   itemVariants: any
@@ -20,13 +21,6 @@ const AVAILABLE_INTERESTS = [
   "Spor", "Müzik", "Sanat", "Teknoloji", "Bilim", "Edebiyat", "Sinema",
   "Tiyatro", "Fotoğrafçılık", "Seyahat", "Yemek", "Dans", "Yoga", "Doğa", "Tarih"
 ]
-
-interface Country {
-  name: {
-    common: string
-  }
-  cca2: string
-}
 
 export default function RegisterForm({ itemVariants, onRegister }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false)
@@ -47,25 +41,72 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
     phoneNumber: '',
   })
   const [isLoading, setIsLoading] = useState(false)
-  const [countries, setCountries] = useState<Country[]>([])
-  const [isLoadingCountries, setIsLoadingCountries] = useState(false)
+  const [mapCenter, setMapCenter] = useState({ lat: 0, lng: 0 })
+  const [markerPosition, setMarkerPosition] = useState<google.maps.LatLngLiteral | null>(null)
+
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "", 
+  });
 
   useEffect(() => {
-    const fetchCountries = async () => {
-      setIsLoadingCountries(true)
-      try {
-        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2')
-        const data = await response.json()
-        setCountries(data.sort((a: Country, b: Country) => a.name.common.localeCompare(b.name.common)))
-      } catch (error) {
-        console.error('Error fetching countries:', error)
-      } finally {
-        setIsLoadingCountries(false)
-      }
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const pos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          }
+          setMapCenter(pos)
+          setMarkerPosition(pos)
+          updateLocationInfo(pos) // Sayfa yüklenirken konum bilgilerini alır
+        },
+        () => {
+          console.error("Error: The Geolocation service failed.")
+        }
+      )
     }
-
-    fetchCountries()
   }, [])
+
+  const updateLocationInfo = (location: google.maps.LatLngLiteral) => {
+    const geocoder = new google.maps.Geocoder()
+    geocoder.geocode({ location: location }, (results, status) => {
+      if (status === "OK" && results && results[0]) {
+        const addressComponents = results[0].address_components
+        let country = '', city = '', address = results[0].formatted_address
+
+        // Adres bileşenlerini ayırma
+        addressComponents.forEach(component => {
+          if (component.types.includes("country")) {
+            country = component.long_name
+          }
+          if (component.types.includes("locality")) {
+            city = component.long_name
+          }
+        })
+
+        // Form verilerini güncelleme
+        setFormData(prev => ({
+          ...prev,
+          address,
+          city,
+          country,
+          latitude: location.lat,
+          longitude: location.lng
+        }))
+      } else {
+        console.error("Geocoder failed due to: " + status)
+      }
+    })
+  }
+
+  // Haritaya tıklanınca tetiklenen fonksiyon
+  const handleMapClick = (e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      const location = e.latLng.toJSON()
+      setMarkerPosition(location)
+      updateLocationInfo(location) // Tıklanan konuma göre bilgileri günceller
+    }
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -91,7 +132,6 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
     e.preventDefault()
     setIsLoading(true)
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000))
       await onRegister(formData)
     } catch (error) {
       console.error('Kayıt başarısız:', error)
@@ -107,7 +147,7 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
       formData.email &&
       formData.address &&
       formData.city &&
-      formData.country && formData.country !== 'loading' && formData.country !== 'error' &&
+      formData.country &&
       formData.name &&
       formData.surname &&
       formData.birthDate &&
@@ -254,41 +294,46 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
         )}
       </motion.div>
 
+      {/* Harita Alanı */}
+      <motion.div variants={itemVariants} className="space-y-2">
+        <Label>Konum Seçin</Label>
+        {isLoaded ? (
+          <div style={{ height: '400px', width: '100%' }}>
+            <GoogleMap
+              center={mapCenter}
+              zoom={10}
+              onClick={handleMapClick}
+              mapContainerStyle={{ height: '100%', width: '100%' }}
+            >
+              {markerPosition && <Marker position={markerPosition} />}
+            </GoogleMap>
+          </div>
+        ) : (
+          <div>Harita yükleniyor...</div>
+        )}
+      </motion.div>
+
       <motion.div variants={itemVariants} className="space-y-2">
         <Label htmlFor="address">Adres</Label>
         <Input
           id="address"
           name="address"
           value={formData.address}
-          onChange={handleInputChange}
           required
+          readOnly
         />
       </motion.div>
 
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="country">Ülke</Label>
-          <Select
+          <Input
+            id="country"
+            name="country"
             value={formData.country}
-            onValueChange={(value) => handleSelectChange('country', value)}
-          >
-            <SelectTrigger id="country">
-              <SelectValue placeholder="Ülke seçin" />
-            </SelectTrigger>
-            <SelectContent>
-              {isLoadingCountries ? (
-                <SelectItem value="loading" disabled>Yükleniyor...</SelectItem>
-              ) : countries.length === 0 ? (
-                <SelectItem value="error" disabled>Ülkeler yüklenemedi</SelectItem>
-              ) : (
-                countries.map((country) => (
-                  <SelectItem key={country.cca2} value={country.cca2}>
-                    {country.name.common}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+            required
+            readOnly
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="city">Şehir</Label>
@@ -296,8 +341,8 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
             id="city"
             name="city"
             value={formData.city}
-            onChange={handleInputChange}
             required
+            readOnly
           />
         </div>
       </motion.div>

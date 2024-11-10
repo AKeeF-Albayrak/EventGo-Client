@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff } from 'lucide-react'
 import { ClipLoader } from 'react-spinners'
 
@@ -25,7 +24,7 @@ export default function LoginForm({ itemVariants, onLogin }: LoginFormProps) {
     setIsLoading(true)
     try {
       // Yükleme durumunu simüle etmek için 2 saniye bekleyin
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      await new Promise(resolve => setTimeout(resolve, 1000))
       await onLogin(username, password)
     } catch (error) {
       console.error('Giriş başarısız:', error)
@@ -65,10 +64,6 @@ export default function LoginForm({ itemVariants, onLogin }: LoginFormProps) {
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
         </div>
-      </motion.div>
-      <motion.div variants={itemVariants} className="flex items-center space-x-2">
-        <Checkbox id="remember-me" />
-        <Label htmlFor="remember-me">Beni hatırla</Label>
       </motion.div>
       <motion.div variants={itemVariants}>
         <Button type="submit" className="w-full" disabled={isLoading}>
