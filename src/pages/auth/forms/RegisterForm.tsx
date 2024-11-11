@@ -10,7 +10,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { ClipLoader } from 'react-spinners'
 import { Badge } from "@/components/ui/badge"
 import { X } from "lucide-react"
-import { useLoadScript, GoogleMap, Marker } from '@react-google-maps/api'
+import { useLoadScript, GoogleMap } from '@react-google-maps/api'
 
 interface RegisterFormProps {
   itemVariants: any
@@ -43,13 +43,15 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
   const [isLoading, setIsLoading] = useState(false)
   const [mapCenter, setMapCenter] = useState({ lat: 0, lng: 0 })
   const [markerPosition, setMarkerPosition] = useState<google.maps.LatLngLiteral | null>(null)
+  const [map, setMap] = useState<google.maps.Map | null>(null)
+  const [marker, setMarker] = useState<google.maps.Marker | null>(null)
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "", 
   });
 
   useEffect(() => {
-    if (navigator.geolocation) {
+    if (isLoaded && navigator.geolocation) { // Yalnızca API yüklendiyse çalıştırır
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const pos = {
@@ -58,33 +60,36 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
           }
           setMapCenter(pos)
           setMarkerPosition(pos)
-          updateLocationInfo(pos) // Sayfa yüklenirken konum bilgilerini alır
+          updateLocationInfo(pos) // Yalnızca `isLoaded` olduğunda çağrılır
         },
         () => {
           console.error("Error: The Geolocation service failed.")
         }
       )
     }
-  }, [])
+  }, [isLoaded]) // `isLoaded` yüklendiğinde çalışır
 
   const updateLocationInfo = (location: google.maps.LatLngLiteral) => {
-    const geocoder = new google.maps.Geocoder()
+    if (!window.google) { // Eğer google tanımlı değilse fonksiyonu çalıştırma
+      console.error("Google Maps API not loaded");
+      return;
+    }
+  
+    const geocoder = new window.google.maps.Geocoder()
     geocoder.geocode({ location: location }, (results, status) => {
       if (status === "OK" && results && results[0]) {
         const addressComponents = results[0].address_components
         let country = '', city = '', address = results[0].formatted_address
-
-        // Adres bileşenlerini ayırma
+  
         addressComponents.forEach(component => {
           if (component.types.includes("country")) {
             country = component.long_name
           }
-          if (component.types.includes("locality")) {
+          if (component.types.includes("locality") || component.types.includes("administrative_area_level_1")) {
             city = component.long_name
           }
         })
-
-        // Form verilerini güncelleme
+  
         setFormData(prev => ({
           ...prev,
           address,
@@ -101,10 +106,37 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
 
   // Haritaya tıklanınca tetiklenen fonksiyon
   const handleMapClick = (e: google.maps.MapMouseEvent) => {
-    if (e.latLng) {
+    if (e.latLng && map) {
       const location = e.latLng.toJSON()
       setMarkerPosition(location)
-      updateLocationInfo(location) // Tıklanan konuma göre bilgileri günceller
+      updateLocationInfo(location)
+
+      if (marker) {
+        marker.setMap(null)
+      }
+
+      const newMarker = new google.maps.Marker({
+        position: location,
+        map: map,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: "#4285F4",
+          fillOpacity: 1,
+          strokeColor: "#FFFFFF",
+          strokeWeight: 2,
+        },
+      })
+      setMarker(newMarker)
+
+      const infoWindow = new google.maps.InfoWindow({
+        content: `<div>Seçilen Konum</div>`
+      })
+      infoWindow.open(map, newMarker)
+
+      map.addListener('click', () => {
+        infoWindow.close()
+      })
     }
   }
 
@@ -304,8 +336,13 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
               zoom={10}
               onClick={handleMapClick}
               mapContainerStyle={{ height: '100%', width: '100%' }}
+              onLoad={setMap}
+              options={{
+                streetViewControl: false, // Pegman'i devre dışı bırakır
+                mapTypeControl: false, // İsteğe bağlı, harita türü kontrolünü ekler veya kaldırır
+              }}
             >
-              {markerPosition && <Marker position={markerPosition} />}
+              {/* Marker is now handled in handleMapClick */}
             </GoogleMap>
           </div>
         ) : (
@@ -319,8 +356,8 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
           id="address"
           name="address"
           value={formData.address}
+          onChange={handleInputChange}
           required
-          readOnly
         />
       </motion.div>
 
@@ -331,8 +368,8 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
             id="country"
             name="country"
             value={formData.country}
+            onChange={handleInputChange}
             required
-            readOnly
           />
         </div>
         <div className="space-y-2">
@@ -341,8 +378,8 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
             id="city"
             name="city"
             value={formData.city}
+            onChange={handleInputChange}
             required
-            readOnly
           />
         </div>
       </motion.div>
