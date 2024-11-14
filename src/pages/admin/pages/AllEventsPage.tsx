@@ -1,10 +1,15 @@
+'use client'
+
+import { AllEventsContent } from '../Content/AllEventsContent'
+import { AdminProvider } from '@/contexts/AdminContext'
 
 const AllEventsPage = () => {
-
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-4">AllEventsPage</h1>
-    </div>
+    <AdminProvider>
+      <div className="container mx-auto px-4 py-8">
+        <AllEventsContent />
+      </div>
+    </AdminProvider>
   )
 }
 
