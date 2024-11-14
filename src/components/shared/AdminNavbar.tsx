@@ -23,7 +23,8 @@ export default function AdminNavbar() {
   const navItems = [
     { to: '/admin/dashboard', icon: Home, label: 'Dashboard' },
     { to: '/admin/users', icon: Users, label: 'Kullanıcı Yönetimi' },
-    { to: '/admin/events', icon: Calendar, label: 'Etkinlik Yönetimi' },
+    { to: '/admin/all-events', icon: Calendar, label: 'Tüm Etkinlikler' },
+    { to: '/admin/events-pending', icon: Calendar, label: 'Onay Bekleyen Etkinlikler' },
   ]
 
   // Çıkış yapma işlevi

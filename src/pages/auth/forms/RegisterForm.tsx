@@ -58,6 +58,7 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           }
+          console.log('Current position:', pos)
           setMapCenter(pos)
           setMarkerPosition(pos)
           updateLocationInfo(pos) // Yalnızca `isLoaded` olduğunda çağrılır
