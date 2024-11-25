@@ -1,16 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React,{ useState, useEffect, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Upload } from 'lucide-react'
 import { ClipLoader } from 'react-spinners'
 import { Badge } from "@/components/ui/badge"
 import { X } from "lucide-react"
-import { useLoadScript, GoogleMap } from '@react-google-maps/api'
+import { useLoadScript, GoogleMap, Marker } from '@react-google-maps/api'
 
 interface RegisterFormProps {
   itemVariants: any
@@ -39,107 +39,113 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
     birthDate: '',
     gender: '',
     phoneNumber: '',
+    image: null as File | null,
   })
   const [isLoading, setIsLoading] = useState(false)
-  const [mapCenter, setMapCenter] = useState({ lat: 0, lng: 0 })
-  const [markerPosition, setMarkerPosition] = useState<google.maps.LatLngLiteral | null>(null)
+  const [mapCenter, setMapCenter] = useState({ lat: 39.9334, lng: 32.8597 })
+  const [selectedLocation, setSelectedLocation] = useState<google.maps.LatLngLiteral | null>(null)
   const [map, setMap] = useState<google.maps.Map | null>(null)
-  const [marker, setMarker] = useState<google.maps.Marker | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [marker, setMarker] = useState<google.maps.Marker | null>(null);
 
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "", 
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
   });
 
   useEffect(() => {
-    if (isLoaded && navigator.geolocation) { // Yalnızca API yüklendiyse çalıştırır
+    if (loadError) {
+      console.error("Harita yükleme hatası:", loadError);
+    }
+  }, [loadError]);
+
+  const updateLocationInfo = useCallback(async (location: google.maps.LatLngLiteral) => {
+    try {
+      const geocoder = new google.maps.Geocoder();
+      const response = await new Promise((resolve, reject) => {
+        geocoder.geocode({ location }, (results, status) => {
+          if (status === "OK" && results?.[0]) {
+            resolve(results[0]);
+          } else {
+            reject(status);
+          }
+        });
+      });
+
+      const result = response as google.maps.GeocoderResult;
+      const addressComponents = result.address_components;
+      let country = '', city = '', address = result.formatted_address;
+
+      for (const component of addressComponents) {
+        if (component.types.includes("country")) {
+          country = component.long_name;
+        }
+        if (component.types.includes("administrative_area_level_1")) {
+          city = component.long_name;
+        }
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        address,
+        city: city || 'Bilinmiyor',
+        country: country || 'Bilinmiyor',
+        latitude: location.lat,
+        longitude: location.lng
+      }));
+    } catch (error) {
+      console.error("Geocoding hatası:", error);
+      setFormData(prev => ({
+        ...prev,
+        latitude: location.lat,
+        longitude: location.lng
+      }));
+    }
+  }, []);
+
+  const updateOrCreateMarker = useCallback((position: google.maps.LatLngLiteral) => {
+    if (marker) {
+      marker.setMap(null);
+    }
+    setSelectedLocation(position);
+  }, [marker]);
+
+  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      const point = e.latLng.toJSON();
+      setSelectedLocation(point);
+      updateLocationInfo(point);
+      updateOrCreateMarker(point);
+    }
+  }, [updateLocationInfo, updateOrCreateMarker]);
+
+  const onMapLoad = useCallback((map: google.maps.Map) => {
+    setMap(map);
+    
+    if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const pos = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
-          }
-          console.log('Current position:', pos)
-          setMapCenter(pos)
-          setMarkerPosition(pos)
-          updateLocationInfo(pos) // Yalnızca `isLoaded` olduğunda çağrılır
+          };
+          map.setCenter(pos);
+          setMapCenter(pos);
+          setSelectedLocation(pos);
+          updateLocationInfo(pos);
+          updateOrCreateMarker(pos);
         },
         () => {
-          console.error("Error: The Geolocation service failed.")
+          const defaultCenter = { lat: 39.9334, lng: 32.8597 };
+          map.setCenter(defaultCenter);
+          setMapCenter(defaultCenter);
+          setSelectedLocation(defaultCenter);
+          updateLocationInfo(defaultCenter);
+          updateOrCreateMarker(defaultCenter);
         }
-      )
+      );
     }
-  }, [isLoaded]) // `isLoaded` yüklendiğinde çalışır
-
-  const updateLocationInfo = (location: google.maps.LatLngLiteral) => {
-    if (!window.google) { // Eğer google tanımlı değilse fonksiyonu çalıştırma
-      console.error("Google Maps API not loaded");
-      return;
-    }
-  
-    const geocoder = new window.google.maps.Geocoder()
-    geocoder.geocode({ location: location }, (results, status) => {
-      if (status === "OK" && results && results[0]) {
-        const addressComponents = results[0].address_components
-        let country = '', city = '', address = results[0].formatted_address
-  
-        addressComponents.forEach(component => {
-          if (component.types.includes("country")) {
-            country = component.long_name
-          }
-          if (component.types.includes("locality") || component.types.includes("administrative_area_level_1")) {
-            city = component.long_name
-          }
-        })
-  
-        setFormData(prev => ({
-          ...prev,
-          address,
-          city,
-          country,
-          latitude: location.lat,
-          longitude: location.lng
-        }))
-      } else {
-        console.error("Geocoder failed due to: " + status)
-      }
-    })
-  }
-
-  // Haritaya tıklanınca tetiklenen fonksiyon
-  const handleMapClick = (e: google.maps.MapMouseEvent) => {
-    if (e.latLng && map) {
-      const location = e.latLng.toJSON()
-      setMarkerPosition(location)
-      updateLocationInfo(location)
-
-      if (marker) {
-        marker.setMap(null)
-      }
-
-      const newMarker = new google.maps.Marker({
-        position: location,
-        map: map,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: "#4285F4",
-          fillOpacity: 1,
-          strokeColor: "#FFFFFF",
-          strokeWeight: 2,
-        },
-      })
-      setMarker(newMarker)
-
-      const infoWindow = new google.maps.InfoWindow({
-        content: `<div>Seçilen Konum</div>`
-      })
-      infoWindow.open(map, newMarker)
-
-      map.addListener('click', () => {
-        infoWindow.close()
-      })
-    }
-  }
+  }, [updateLocationInfo, updateOrCreateMarker]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -159,6 +165,18 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
         return { ...prev, interests: [...currentInterests, interest] }
       }
     })
+  }
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setFormData(prev => ({ ...prev, image: file }))
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -192,6 +210,47 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
+
+      {/* Profile Section */}
+      <motion.div variants={itemVariants} className="flex flex-col items-center space-y-4 p-6 border rounded-lg bg-muted/50">
+        <div className="relative w-32 h-32">
+          {previewUrl ? (
+            <img
+              src={previewUrl}
+              alt="Profile Preview"
+              className="w-full h-full object-cover rounded-full border-4 border-background"
+            />
+          ) : (
+            <div className="w-full h-full rounded-full bg-muted flex items-center justify-center border-4 border-background">
+              <Upload className="w-8 h-8 text-muted-foreground" />
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col items-center space-y-2">
+          <Button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            variant="secondary"
+            className="flex items-center space-x-2"
+          >
+            <Upload className="w-4 h-4" />
+            <span>Profil Resmi Yükle</span>
+          </Button>
+          <input
+            type="file"
+            id="profilePicture"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*"
+            onChange={handleImageUpload}
+          />
+          <p className="text-sm text-muted-foreground">
+            JPG, PNG veya GIF • Max 2MB
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Personal Information Section */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="name">Ad</Label>
@@ -201,6 +260,7 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
             value={formData.name}
             onChange={handleInputChange}
             required
+            autoComplete="off"
           />
         </div>
         <div className="space-y-2">
@@ -211,10 +271,12 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
             value={formData.surname}
             onChange={handleInputChange}
             required
+            autoComplete="off"
           />
         </div>
       </motion.div>
 
+      {/* Kullanıcı Adı */}
       <motion.div variants={itemVariants} className="space-y-2">
         <Label htmlFor="username">Kullanıcı Adı</Label>
         <Input
@@ -223,9 +285,11 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
           value={formData.username}
           onChange={handleInputChange}
           required
+          autoComplete="off"
         />
       </motion.div>
 
+      {/* E-posta */}
       <motion.div variants={itemVariants} className="space-y-2">
         <Label htmlFor="email">E-posta</Label>
         <Input
@@ -238,6 +302,7 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
         />
       </motion.div>
 
+      {/* Şifre */}
       <motion.div variants={itemVariants} className="space-y-2">
         <Label htmlFor="passwordHash">Şifre</Label>
         <div className="relative">
@@ -261,6 +326,7 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
         </div>
       </motion.div>
 
+      {/* Doğum Tarihi ve Cinsiyet */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="birthDate">Doğum Tarihi</Label>
@@ -283,14 +349,14 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
               <SelectValue placeholder="Cinsiyet seçin" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="male">Erkek</SelectItem>
-              <SelectItem value="female">Kadın</SelectItem>
-              <SelectItem value="other">Diğer</SelectItem>
+              <SelectItem value="1">Erkek</SelectItem>
+              <SelectItem value="0">Kadın</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </motion.div>
 
+      {/* Telefon Numarası */}
       <motion.div variants={itemVariants} className="space-y-2">
         <Label htmlFor="phoneNumber">Telefon Numarası</Label>
         <Input
@@ -303,6 +369,7 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
         />
       </motion.div>
 
+      {/* İlgi Alanları */}
       <motion.div variants={itemVariants} className="space-y-2">
         <Label>İlgi Alanları</Label>
         <div className="flex flex-wrap gap-2 p-4 border rounded-md">
@@ -330,38 +397,57 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
       {/* Harita Alanı */}
       <motion.div variants={itemVariants} className="space-y-2">
         <Label>Konum Seçin</Label>
-        {isLoaded ? (
-          <div style={{ height: '400px', width: '100%' }}>
-            <GoogleMap
-              center={mapCenter}
-              zoom={10}
-              onClick={handleMapClick}
-              mapContainerStyle={{ height: '100%', width: '100%' }}
-              onLoad={setMap}
-              options={{
-                streetViewControl: false, // Pegman'i devre dışı bırakır
-                mapTypeControl: false, // İsteğe bağlı, harita türü kontrolünü ekler veya kaldırır
-              }}
-            >
-              {/* Marker is now handled in handleMapClick */}
-            </GoogleMap>
+        {!isLoaded ? (
+          <div className="flex items-center justify-center h-[400px] bg-muted">
+            <div className="text-center">
+              <ClipLoader color="#1a365d" size={40} />
+              <p className="mt-2">Harita yükleniyor...</p>
+            </div>
           </div>
         ) : (
-          <div>Harita yükleniyor...</div>
+          <div style={{ height: '400px', width: '100%', position: 'relative' }}>
+            <GoogleMap
+              mapContainerStyle={{ height: '100%', width: '100%' }}
+              center={mapCenter}
+              zoom={12}
+              onClick={handleMapClick}
+              onLoad={onMapLoad}
+              options={{
+                mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID,
+                streetViewControl: false,
+                mapTypeControl: false,
+                zoomControl: true,
+                scrollwheel: true,
+                gestureHandling: 'greedy',
+                fullscreenControl: true,
+                scaleControl: true,
+                rotateControl: false,
+                clickableIcons: false,
+              }}
+            >
+              {selectedLocation && (
+                <Marker
+                  position={selectedLocation}
+                  title="Seçilen Konum"
+                />
+              )}
+            </GoogleMap>
+          </div>
         )}
       </motion.div>
-
+      
+      {/* Adres */}
       <motion.div variants={itemVariants} className="space-y-2">
         <Label htmlFor="address">Adres</Label>
         <Input
           id="address"
           name="address"
           value={formData.address}
-          onChange={handleInputChange}
-          required
+          readOnly
         />
       </motion.div>
 
+      {/* Ülke ve Şehir */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="country">Ülke</Label>
@@ -369,8 +455,7 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
             id="country"
             name="country"
             value={formData.country}
-            onChange={handleInputChange}
-            required
+            readOnly
           />
         </div>
         <div className="space-y-2">
@@ -379,12 +464,12 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
             id="city"
             name="city"
             value={formData.city}
-            onChange={handleInputChange}
-            required
+            readOnly
           />
         </div>
       </motion.div>
 
+      {/* Kayıt ol butonu */}
       <motion.div variants={itemVariants}>
         <Button
           type="submit"

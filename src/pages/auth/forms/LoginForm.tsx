@@ -5,8 +5,16 @@ import { motion } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff } from 'lucide-react'
-import { ClipLoader } from 'react-spinners'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+
+const loginSchema = z.object({
+  username: z.string().min(1, "Kullanıcı adı gereklidir"),
+  password: z.string().min(1, "Şifre gereklidir"),
+})
 
 interface LoginFormProps {
   itemVariants: any
@@ -15,17 +23,20 @@ interface LoginFormProps {
 
 export default function LoginForm({ itemVariants, onLogin }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  })
+
+  const handleSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true)
     try {
-      // Yükleme durumunu simüle etmek için 2 saniye bekleyin
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      await onLogin(username, password)
+      await onLogin(values.username, values.password)
     } catch (error) {
       console.error('Giriş başarısız:', error)
     } finally {
@@ -34,49 +45,98 @@ export default function LoginForm({ itemVariants, onLogin }: LoginFormProps) {
   }
 
   return (
-    <form className="space-y-6" onSubmit={handleSubmit}>
-      <motion.div variants={itemVariants} className="space-y-2">
-        <Label htmlFor="login-username">Kullanıcı Adı</Label>
-        <Input 
-          id="login-username" 
-          value={username} 
-          onChange={(e) => setUsername(e.target.value)} 
-          required 
-        />
-      </motion.div>
-      <motion.div variants={itemVariants} className="space-y-2">
-        <Label htmlFor="login-password">Şifre</Label>
-        <div className="relative">
-          <Input
-            id="login-password"
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
+    <Form {...form}>
+      <form 
+        onSubmit={form.handleSubmit(handleSubmit)} 
+        className="space-y-6"
+        autoComplete="off"
+      >
+        <motion.div variants={itemVariants}>
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Kullanıcı Adı</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="text"
+                    name="username" // Explicitly set name
+                    id="username"
+                    autoComplete="username webauthn"
+                    disabled={isLoading}
+                    aria-label="Kullanıcı adı"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2"
-            onClick={() => setShowPassword(!showPassword)}
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Şifre</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      type={showPassword ? "text" : "password"}
+                      name="password" // Explicitly set name
+                      id="password"
+                      autoComplete="current-password webauthn"
+                      disabled={isLoading}
+                      aria-label="Şifre"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={isLoading}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" aria-hidden="true" />
+                      ) : (
+                        <Eye className="h-4 w-4" aria-hidden="true" />
+                      )}
+                      <span className="sr-only">
+                        {showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                      </span>
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading}
           >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Giriş Yapılıyor
+              </>
+            ) : (
+              'Giriş Yap'
+            )}
           </Button>
-        </div>
-      </motion.div>
-      <motion.div variants={itemVariants}>
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <ClipLoader color="#1a365d" loading={isLoading} size={30} />
-              <span className="ml-2">Giriş Yapılıyor...</span>
-            </div>
-          ) : (
-            'Giriş Yap'
-          )}
-        </Button>
-      </motion.div>
-    </form>
+        </motion.div>
+      </form>
+    </Form>
   )
 }
+
