@@ -22,7 +22,6 @@ const AVAILABLE_INTERESTS = [
   "Tiyatro", "Fotoğrafçılık", "Seyahat", "Yemek", "Dans", "Yoga", "Doğa", "Tarih"
 ]
 
-// Yardımcı fonksiyon ekleyelim
 const convertFileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -36,7 +35,6 @@ const convertFileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-// Interest mapping ekleyelim
 const INTEREST_MAPPING: { [key: string]: number } = {
   "Spor": 0,
   "Müzik": 1,
@@ -217,19 +215,15 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
     setIsLoading(true);
     
     try {
-      // Image'i base64'e çevirelim
       let imageBase64 = '';
       if (formData.image) {
         imageBase64 = await convertFileToBase64(formData.image);
       }
 
-      // Interest'leri sayısal değerlere dönüştürelim
       const numericInterests = formData.interests.map(interest => INTEREST_MAPPING[interest]);
 
-      // Gender'ı boolean'a çevirelim
       const genderBoolean = formData.gender === "1";
 
-      // Backend'e gönderilecek veriyi hazırlayalım
       const submitData = {
         ...formData,
         interests: numericInterests,

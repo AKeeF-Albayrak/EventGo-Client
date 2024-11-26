@@ -24,6 +24,9 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
+  sendResetEmail: (email: string) => Promise<void>;
+  verifyResetCode: (email: string, code: string) => Promise<void>;
+  updatePassword: (email: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -97,8 +100,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(false);
   };
 
+  const sendResetEmail = async (email: string) => {
+    try {
+      await axiosInstance.post('/Auth/SendEmail', { email });
+    } catch (error) {
+      console.error('Email gönderimi başarısız:', error);
+      throw error;
+    }
+  };
+
+  const verifyResetCode = async (email: string, code: string) => {
+    try {
+      await axiosInstance.post('/Auth/VerifyCode', { 
+        email, 
+        enteredCode: code 
+      });
+    } catch (error) {
+      console.error('Kod doğrulama başarısız:', error);
+      throw error;
+    }
+  };
+
+  const updatePassword = async (email: string, newPassword: string) => {
+    try {
+      await axiosInstance.post('/Auth/UpdatePassword', { 
+        email, 
+        newPassword 
+      });
+    } catch (error) {
+      console.error('Şifre güncelleme başarısız:', error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated, isLoading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      register, 
+      logout, 
+      isAuthenticated, 
+      isLoading,
+      sendResetEmail,
+      verifyResetCode,
+      updatePassword
+    }}>
       {children}
     </AuthContext.Provider>
   );
