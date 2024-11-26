@@ -22,6 +22,39 @@ const AVAILABLE_INTERESTS = [
   "Tiyatro", "Fotoğrafçılık", "Seyahat", "Yemek", "Dans", "Yoga", "Doğa", "Tarih"
 ]
 
+// Yardımcı fonksiyon ekleyelim
+const convertFileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const base64String = reader.result as string;
+      const base64 = base64String.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
+// Interest mapping ekleyelim
+const INTEREST_MAPPING: { [key: string]: number } = {
+  "Spor": 0,
+  "Müzik": 1,
+  "Sanat": 2,
+  "Teknoloji": 3,
+  "Bilim": 4,
+  "Edebiyat": 5,
+  "Sinema": 6,
+  "Tiyatro": 7,
+  "Fotoğrafçılık": 8,
+  "Seyahat": 9,
+  "Yemek": 10,
+  "Dans": 11,
+  "Yoga": 12,
+  "Doğa": 13,
+  "Tarih": 14
+};
+
 export default function RegisterForm({ itemVariants, onRegister }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
@@ -180,16 +213,38 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
+    
     try {
-      await onRegister(formData)
+      // Image'i base64'e çevirelim
+      let imageBase64 = '';
+      if (formData.image) {
+        imageBase64 = await convertFileToBase64(formData.image);
+      }
+
+      // Interest'leri sayısal değerlere dönüştürelim
+      const numericInterests = formData.interests.map(interest => INTEREST_MAPPING[interest]);
+
+      // Gender'ı boolean'a çevirelim
+      const genderBoolean = formData.gender === "1";
+
+      // Backend'e gönderilecek veriyi hazırlayalım
+      const submitData = {
+        ...formData,
+        interests: numericInterests,
+        image: imageBase64,
+        gender: genderBoolean,
+        birthDate: new Date(formData.birthDate).toISOString()
+      };
+
+      await onRegister(submitData);
     } catch (error) {
-      console.error('Kayıt başarısız:', error)
+      console.error('Kayıt başarısız:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const isFormValid = () => {
     return (
@@ -213,13 +268,20 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
 
       {/* Profile Section */}
       <motion.div variants={itemVariants} className="flex flex-col items-center space-y-4 p-6 border rounded-lg bg-muted/50">
-        <div className="relative w-32 h-32">
+        <div className="relative w-32 h-32 group cursor-pointer"
+          onClick={() => fileInputRef.current?.click()}
+        >
           {previewUrl ? (
-            <img
-              src={previewUrl}
-              alt="Profile Preview"
-              className="w-full h-full object-cover rounded-full border-4 border-background"
-            />
+            <>
+              <img
+                src={previewUrl}
+                alt="Profile Preview"
+                className="w-full h-full object-cover rounded-full border-4 border-background transition-opacity duration-200 group-hover:opacity-70"
+              />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <Upload className="w-8 h-8 text-white" />
+              </div>
+            </>
           ) : (
             <div className="w-full h-full rounded-full bg-muted flex items-center justify-center border-4 border-background">
               <Upload className="w-8 h-8 text-muted-foreground" />
@@ -377,7 +439,8 @@ export default function RegisterForm({ itemVariants, onRegister }: RegisterFormP
             <Badge
               key={interest}
               variant={formData.interests.includes(interest) ? "default" : "outline"}
-              className="cursor-pointer hover:bg-primary/90"
+              className="cursor-pointer hover:bg-primary/20 transition-colors duration-200"
+            
               onClick={() => handleInterestClick(interest)}
             >
               {interest}
