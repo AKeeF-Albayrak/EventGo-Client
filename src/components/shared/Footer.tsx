@@ -1,61 +1,68 @@
-import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Twitter } from 'lucide-react';
+import { Home, Calendar, Settings, MessageSquare, Plus, Star,Coins,Tickets   } from 'lucide-react';
+import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
+  const navigationItems = [
+    { icon: Home, label: 'Ana Sayfa', path: '/home' },
+    { icon: Tickets , label: 'Şehir Etkinlikleri', path: '/city-events' },
+    { icon: Calendar, label: 'Katıldığım Etkinlikler', path: '/profile/events' },
+    { icon: Star, label: 'Oluşturduğum Etkinlikler', path: '/profile/my-events' },
+    { icon: Coins, label: 'Puan Geçmişi', path: '/profile/points' },
+    { icon: Settings, label: 'Ayarlar', path: '/profile/settings' },
+    { icon: MessageSquare, label: 'Geri Bildirim', path: '/feedback' },
+  ];
+
   return (
     <footer className="bg-gray-800 text-white py-6">
-      <div className="container mx-auto flex flex-col items-center space-y-4 md:flex-row md:justify-between md:space-y-0 px-4">
-        {/* About Section */}
-        <div className="text-center md:text-left">
-          <h3 className="text-lg font-semibold">EventGo</h3>
-          <p className="text-sm mt-1">
-            Etkinlikleri keşfetmek ve katılımı kolaylaştırmak için tasarlanmış bir platform.
-          </p>
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col items-center space-y-6">
+          {/* Quick Navigation */}
+          <nav className="flex flex-wrap justify-center gap-4">
+            <TooltipProvider>
+              {navigationItems.map((item) => (
+                <Tooltip key={item.path}>
+                  <TooltipTrigger asChild>
+                    <Link to={item.path}>
+                      <Button variant="ghost" size="icon" className="text-white hover:text-primary hover:bg-gray-700">
+                        <item.icon className="h-5 w-5" />
+                        <span className="sr-only">{item.label}</span>
+                      </Button>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{item.label}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </TooltipProvider>
+          </nav>
+
+          {/* Create Event Button */}
+          <Link to="/create-event" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90">
+              <Plus className="mr-2 h-4 w-4" /> Yeni Etkinlik Oluştur
+            </Button>
+          </Link>
+
+          {/* About Section */}
+          <div className="text-center max-w-md">
+            <h3 className="text-lg font-semibold mb-2">EventGo</h3>
+            <p className="text-sm">
+              Etkinlikleri keşfetmek ve katılımı kolaylaştırmak için tasarlanmış yenilikçi bir platform.
+            </p>
+          </div>
+
+          {/* Copyright */}
+          <div className="text-xs text-gray-400">
+            <p>&copy; {currentYear} EventGo. Tüm hakları saklıdır.</p>
+          </div>
         </div>
-
-        {/* Quick Links */}
-        <ul className="flex flex-col items-center space-y-2 md:flex-row md:space-x-6 md:space-y-0">
-          <li>
-            <Link to="/about" className="text-sm hover:underline">
-              Hakkımızda
-            </Link>
-          </li>
-          <li>
-            <Link to="/contact" className="text-sm hover:underline">
-              İletişim
-            </Link>
-          </li>
-          <li>
-            <Link to="/privacy" className="text-sm hover:underline">
-              Gizlilik Politikası
-            </Link>
-          </li>
-          <li>
-            <Link to="/terms" className="text-sm hover:underline">
-              Kullanım Şartları
-            </Link>
-          </li>
-        </ul>
-
-        {/* Social Links */}
-        <div className="flex space-x-4">
-          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary">
-            <Facebook className="h-5 w-5" />
-          </a>
-          <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary">
-            <Twitter className="h-5 w-5" />
-          </a>
-          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary">
-            <Instagram className="h-5 w-5" />
-          </a>
-        </div>
-      </div>
-
-      {/* Copyright Section */}
-      <div className="mt-6 text-center text-xs text-gray-400">
-        <p>&copy; {new Date().getFullYear()} EventGo. Tüm hakları saklıdır.</p>
       </div>
     </footer>
   );
 }
+

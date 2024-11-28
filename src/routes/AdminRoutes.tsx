@@ -4,7 +4,7 @@ import UserManagementPage from '../pages/admin/pages/UserManagementPage'
 import PendingEventsPage from '../pages/admin/pages/PendingEventsPage'
 import AllEventsPage from '../pages/admin/pages/AllEventsPage'
 import AdminSettingsPage from '../pages/admin/pages/AdminSettingsPage'
-import { EditEventPage } from '../pages/admin/pages/EditEventPage'
+import  EditEventPage  from '../pages/admin/pages/EditEventPage'
 
 const AdminRoutes = () => (
   <Routes>

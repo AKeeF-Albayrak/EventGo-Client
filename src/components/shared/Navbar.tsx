@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, Calendar, Settings, Star, MessageSquare, Home, Plus, LogOut } from 'lucide-react';
+import { Bell, Calendar, Settings, Star, MessageSquare, Home, Plus, LogOut, Coins, Tickets } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -24,7 +24,7 @@ export default function Navbar() {
   const navItems = [
     { to: '/home', icon: Home, label: 'Anasayfa' },
     { to: '/create-event', icon: Plus, label: 'Etkinlik Oluştur' },
-    { to: '/city-events', icon: Star, label: 'Şehrimdeki Etkinlikler' },
+    { to: '/city-events', icon: Tickets , label: 'Şehrimdeki Etkinlikler' },
   ];
 
   // Çıkış yapma işlevi
@@ -109,11 +109,12 @@ export default function Navbar() {
           {/* Profile Dropdown Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full">
+                <Avatar className="h-10 w-10 overflow-hidden rounded-full">
                   <AvatarImage
-                    src="/placeholder.svg"
+                    src={user?.image ? `data:image/jpeg;base64,${user.image}` : '/placeholder.svg'}
                     alt="User"
+                    className="object-cover w-full h-full"
                   />
                   <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
                 </Avatar>
@@ -143,7 +144,7 @@ export default function Navbar() {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link to="/profile/points">
-                  <Star className="mr-2 h-4 w-4" />
+                  <Coins className="mr-2 h-4 w-4" />
                   Puan Geçmişi
                 </Link>
               </DropdownMenuItem>

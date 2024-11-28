@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/contexts/AuthContext'
+import Swal from 'sweetalert2'
 
 export default function AdminNavbar() {
   const [notifications, setNotifications] = React.useState(2)
@@ -27,10 +28,28 @@ export default function AdminNavbar() {
     { to: '/admin/events-pending', icon: Calendar, label: 'Onay Bekleyen Etkinlikler' },
   ]
 
-  // Çıkış yapma işlevi
+  // Çıkış yapma işlevi güncellendi
   const handleLogout = () => {
-    logout()
-    navigate('/auth') // Çıkıştan sonra giriş sayfasına yönlendirme
+    Swal.fire({
+      title: 'Çıkış yapmak istediğinize emin misiniz?',
+      text: "Oturumunuz sonlandırılacak.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Evet, çıkış yap',
+      cancelButtonText: 'İptal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        logout()
+        navigate('/auth')
+        Swal.fire(
+          'Çıkış Yapıldı!',
+          'Başarıyla çıkış yaptınız.',
+          'success'
+        )
+      }
+    })
   }
 
   return (
