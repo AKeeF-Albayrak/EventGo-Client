@@ -15,6 +15,7 @@ interface User {
   surname?: string;
   birthDate?: string;
   gender?: string;
+  image?: string;
 }
 
 interface AuthContextType {

@@ -18,7 +18,7 @@ export default function FeedbackPage() {
     try {
       setIsLoading(true);
       await axiosInstance.post('/Feedback/SendFeedback', { message });
-      toast.success('Geri bildiriminiz başarıyla gönderildi');
+      toast.success('Geri bildiriminiz başarıyla gönderildi'); // calısmıyho
       setMessage('');
     } catch (error) {
       toast.error('Geri bildirim gönderilirken bir hata oluştu');
