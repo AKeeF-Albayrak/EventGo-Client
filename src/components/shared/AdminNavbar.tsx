@@ -1,6 +1,5 @@
-import * as React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Bell, Calendar, Settings, Users, FileText, Home, LogOut } from 'lucide-react'
+import { Calendar, Settings, Users, Home, LogOut, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,16 +10,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/contexts/AuthContext'
 import Swal from 'sweetalert2'
 
 export default function AdminNavbar() {
-  const [notifications, setNotifications] = React.useState(2)
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
 
-  // Admin Navbar items
   const navItems = [
     { to: '/admin/dashboard', icon: Home, label: 'Dashboard' },
     { to: '/admin/users', icon: Users, label: 'Kullanıcı Yönetimi' },
@@ -28,7 +24,6 @@ export default function AdminNavbar() {
     { to: '/admin/events-pending', icon: Calendar, label: 'Onay Bekleyen Etkinlikler' },
   ]
 
-  // Çıkış yapma işlevi güncellendi
   const handleLogout = () => {
     Swal.fire({
       title: 'Çıkış yapmak istediğinize emin misiniz?',
@@ -78,64 +73,45 @@ export default function AdminNavbar() {
           ))}
         </div>
 
-        {/* Notification & Profile Section */}
+        {/* Profile Section */}
         <div className="flex items-center space-x-4">
-          {/* Notifications */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-4 w-4" />
-                {notifications > 0 && (
-                  <Badge
-                    variant="destructive"
-                    className="absolute -right-1 -top-1 h-4 w-4 text-xs"
-                  >
-                    {notifications}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Bildirimler</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Link to="/admin/events">Yeni etkinlik onay bekliyor</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link to="/admin/users">Yeni kullanıcı kaydı</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
           {/* Profile Dropdown Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full">
+                <Avatar className="h-10 w-10 overflow-hidden rounded-full">
                   <AvatarImage
-                    src="/placeholder.svg"
+                    src={user?.image ? `data:image/jpeg;base64,${user.image}` : '/placeholder.svg'}
                     alt="Admin"
+                    className="object-cover w-full h-full"
                   />
-                  <AvatarFallback>A</AvatarFallback>
+                  <AvatarFallback>{user?.name?.charAt(0) || 'A'}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">Admin</p>
-                  <p className="text-xs text-muted-foreground">admin@example.com</p>
+                  <p className="text-sm font-medium">{user?.name || 'Admin'}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email || 'admin@example.com'}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
 
               {/* Menu Items */}
               <DropdownMenuItem asChild>
+                <Link to="/admin/feedbacks">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Geri Bildirimler
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link to="/admin/settings">
                   <Settings className="mr-2 h-4 w-4" />
                   Admin Ayarları
                 </Link>
               </DropdownMenuItem>
+              
               <DropdownMenuSeparator />
 
               {/* Logout Item */}

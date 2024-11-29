@@ -15,6 +15,7 @@ interface Event {
   createdTime: string;
   latitude?: number;
   longitude?: number;
+  image?: string;
 }
 
 interface AdminContextType {
@@ -111,7 +112,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         country: event.country,
         latitude: event.latitude || 0,
         longitude: event.longitude || 0,
-        category: event.category
+        category: event.category,
+        image: event.image,
       }, {
         headers: {
           'Content-Type': 'application/json'

@@ -66,7 +66,19 @@ export default function PendingEventsContent() {
   }
 
   if (unapprovedEvents.length === 0) {
-    return <div>Onaylanmamış etkinlik bulunmamaktadır.</div>
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
+        <div className="bg-gray-100 rounded-full p-6 mb-4">
+          <LayoutGrid className="w-12 h-12 text-gray-400" />
+        </div>
+        <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          Onay Bekleyen Etkinlik Bulunamadı
+        </h3>
+        <p className="text-gray-500">
+          Şu anda onay bekleyen herhangi bir etkinlik bulunmamaktadır.
+        </p>
+      </div>
+    );
   }
 
   return (

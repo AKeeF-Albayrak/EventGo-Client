@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify'
 import axiosInstance from '@/contexts/AxiosInstance';
 
 export default function FeedbackPage() {
