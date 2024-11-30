@@ -7,6 +7,7 @@ import { RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
+import { formatMessageTime, formatDateHeader, isSameDay } from '@/utils/date'
 
 interface Message {
   id: string
@@ -29,8 +30,9 @@ export default function ChatSection({ eventId }: ChatSectionProps) {
   const fetchMessages = async () => {
     try {
       setIsLoading(true);
-      const response = await axiosInstance.get('/Message/GetMessages', {
-        params: { eventId },
+      const response = await axiosInstance.post('/Message/GetMessages', {
+        eventId
+      }, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
@@ -74,6 +76,38 @@ export default function ChatSection({ eventId }: ChatSectionProps) {
     }
   };
 
+  const renderMessages = () => {
+    return messages.map((message, index) => {
+      const showDateHeader = index === 0 || !isSameDay(messages[index - 1].timestamp, message.timestamp);
+
+      return (
+        <div key={message.id}>
+          {showDateHeader && (
+            <div className="flex justify-center my-4">
+              <div className="bg-muted px-3 py-1 rounded-full text-xs text-muted-foreground">
+                {formatDateHeader(message.timestamp)}
+              </div>
+            </div>
+          )}
+          <div
+            className={`p-3 rounded-lg ${
+              message.userId === user?.id
+                ? 'bg-primary/10 ml-auto max-w-[80%]'
+                : 'bg-muted max-w-[80%]'
+            }`}
+          >
+            <div className="flex justify-between items-start mb-1">
+              <p className="font-semibold text-sm">{message.userName}</p>
+              <span className="text-xs text-muted-foreground">
+                {formatMessageTime(message.timestamp)}
+              </span>
+            </div>
+            <p className="text-foreground">{message.content}</p>
+          </div>
+        </div>
+      );
+    });
+  };
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -91,24 +125,7 @@ export default function ChatSection({ eventId }: ChatSectionProps) {
       </CardHeader>
       <CardContent>
         <div className="h-96 overflow-y-auto space-y-2" aria-live="polite">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`p-3 rounded-lg ${
-                message.userId === user?.id
-                  ? 'bg-primary/10 ml-auto max-w-[80%]'
-                  : 'bg-muted max-w-[80%]'
-              }`}
-            >
-              <div className="flex justify-between items-start mb-1">
-                <p className="font-semibold text-sm">{message.userName}</p>
-                <span className="text-xs text-muted-foreground">
-                  {new Date(message.timestamp).toLocaleTimeString('tr-TR')}
-                </span>
-              </div>
-              <p className="text-foreground">{message.content}</p>
-            </div>
-          ))}
+          {renderMessages()}
         </div>
       </CardContent>
       <CardFooter>
