@@ -12,6 +12,7 @@
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.8",
     "@hookform/resolvers": "^3.9.1",
+    "@microsoft/signalr": "^8.0.7",
     "@radix-ui/react-accordion": "^1.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -59,6 +60,7 @@
     "react-router-dom": "^6.27.0",
     "react-spinners": "^0.14.1",
     "react-toastify": "^10.0.6",
+    "react-use": "^17.5.1",
     "recharts": "^2.13.2",
     "sonner": "^1.5.0",
     "sweetalert2": "^11.14.5",

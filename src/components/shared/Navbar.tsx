@@ -14,11 +14,22 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import Swal from 'sweetalert2';
+import { useSignalRNotifications } from '@/hooks/useSignalRNotifications';
+
 
 export default function Navbar() {
-  const [notifications, setNotifications] = React.useState(2);
+  const [notifications, setNotifications] = React.useState<string[]>([]);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const hubUrl = "https://localhost:7059/notificationsHub";
+  const newNotifications = useSignalRNotifications(hubUrl);
+
+  React.useEffect(() => {
+    if (newNotifications.length > 0) {
+      setNotifications((prev) => [...prev, ...newNotifications]);
+    }
+  }, [newNotifications]);
 
   // Navbar items
   const navItems = [
