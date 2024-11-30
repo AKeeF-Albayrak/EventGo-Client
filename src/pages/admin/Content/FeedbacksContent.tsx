@@ -160,7 +160,7 @@ export function FeedbacksContent() {
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  <span className="truncate max-w-[200px] text-gray-800 dark:text-gray-200">{feedback.userID}</span>
+                  <span className="text-gray-800 dark:text-gray-200">{feedback.userID}</span>
                   {!feedback.isRead && (
                     <Badge variant="secondary" className="ml-2 bg-green-600 text-white">
                       Yeni

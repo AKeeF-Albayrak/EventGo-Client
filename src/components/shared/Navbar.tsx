@@ -133,7 +133,7 @@ export default function Navbar() {
               <DropdownMenuItem asChild>
                 <Link to="/profile/events">
                   <Calendar className="mr-2 h-4 w-4" />
-                  Katıldığım Etkinlikler
+                  Geçmiş Etkinliklerim
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>

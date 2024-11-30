@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
 import { AdminProvider } from './contexts/AdminContext'
+import { EventProvider } from './contexts/EventContext'
 import NotFoundPage from './pages/NotFoundPage'
 import AuthLayout from './layouts/AuthLayout'
 import AuthPage from './pages/auth/pages/AuthPage'
@@ -48,7 +49,9 @@ function AppRoutes() {
           path="/*"
           element={
             <ProtectedRoute role={0}>
-              <UserRoutes />
+              <EventProvider> 
+                <UserRoutes />
+              </EventProvider>
             </ProtectedRoute>
           }
         />

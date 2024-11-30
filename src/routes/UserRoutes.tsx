@@ -7,6 +7,7 @@ import CreatedEventsPage from '../pages/user/pages/profile/CreatedEventsPage'
 import PointsHistoryPage from '../pages/user/pages/profile/PointsHistoryPage'
 import SettingsPage from '../pages/user/pages/profile/SettingsPage'
 import FeedbackPage from '../pages/user/pages/profile/FeedbackPage'
+import EventDetailPage from '@/pages/user/pages/event/EventDetailPage'
 
 const UserRoutes = () => (
   <Routes>
@@ -18,6 +19,7 @@ const UserRoutes = () => (
     <Route path="profile/points" element={<PointsHistoryPage />} />
     <Route path="profile/settings" element={<SettingsPage />} />
     <Route path="feedback" element={<FeedbackPage />} />
+    <Route path="events/:eventId" element={<EventDetailPage />} />
   </Routes>
 )
 

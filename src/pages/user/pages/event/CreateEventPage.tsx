@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -13,6 +13,11 @@ import { format } from "date-fns"
 import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api'
 import { motion } from 'framer-motion'
 import { tr } from 'date-fns/locale'
+import { toast } from 'react-toastify'
+import Swal from 'sweetalert2'
+import { useEvent } from '@/contexts/EventContext'
+import { useNavigate } from 'react-router-dom'
+import { ImageUpload } from '@/pages/user/Content/ImageUpload'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -78,7 +83,8 @@ export default function CreateEventPage() {
     category: 0,
     image: null
   });
-
+  const { addEvent } = useEvent();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false)
   const [mapCenter, setMapCenter] = useState({ lat: 39.9334, lng: 32.8597 });
   const [selectedLocation, setSelectedLocation] = useState<google.maps.LatLngLiteral | null>(null);
@@ -171,8 +177,10 @@ export default function CreateEventPage() {
   }
 
   const handleSelectChange = (value: string) => {
-    setEventData(prev => ({ ...prev, category: value }))
-  }
+    const categoryNumber = CATEGORY_MAPPING[value];
+    console.log('Seçilen kategori:', value, 'Numara:', categoryNumber);
+    setEventData(prev => ({ ...prev, category: categoryNumber }));
+  };
 
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
@@ -197,31 +205,42 @@ export default function CreateEventPage() {
     setIsLoading(true);
 
     try {
-      let imageBase64 = '';
-      if (eventData.image) {
-        imageBase64 = await convertFileToBase64(eventData.image);
+      if (!eventData.name || !eventData.description || !eventData.date || !eventData.image) {
+        throw new Error('Lütfen tüm zorunlu alanları doldurun');
       }
 
-      const submitData = {
-        ...eventData,
-        date: eventData.date?.toISOString(),
-        image: imageBase64
-      };
+      const formData = new FormData();
+      formData.append('Name', eventData.name);
+      formData.append('Description', eventData.description);
+      formData.append('Date', eventData.date.toISOString());
+      formData.append('Duration', eventData.duration.toString());
+      formData.append('Address', eventData.address);
+      formData.append('City', eventData.city);
+      formData.append('Country', eventData.country);
+      formData.append('Latitude', eventData.latitude.toString());
+      formData.append('Longitude', eventData.longitude.toString());
+      formData.append('Category', eventData.category.toString());
+      formData.append('Image', eventData.image);
 
-      // API call here
-      await createEvent(submitData);
-      
-      toast.success('Etkinlik başarıyla oluşturuldu');
-      // Redirect or clear form
-    } catch (error) {
-      toast.error('Etkinlik oluşturulurken bir hata oluştu');
-      console.error(error);
+      const result = await addEvent(formData);
+
+      if (result.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Başarılı!',
+          text: 'Etkinlik başarıyla oluşturuldu.',
+          confirmButtonText: 'Tamam'
+        }).then(() => {
+          navigate('/home');
+        });
+      }
+    } catch (error: any) {
+      console.error('Etkinlik oluşturma hatası:', error);
+      toast.error(error.message || 'Etkinlik oluşturulurken bir hata oluştu');
     } finally {
       setIsLoading(false);
     }
   };
-
-  
 
   const isFormValid = () => {
     return eventData.name && eventData.description && eventData.address && eventData.category && eventData.image
@@ -242,35 +261,18 @@ export default function CreateEventPage() {
           <div className="grid md:grid-cols-2 gap-8">
             {/* Sol Kolon - Resim */}
             <motion.div variants={itemVariants} className="space-y-4">
-              <div 
-                className="relative aspect-video w-full overflow-hidden rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-primary/50 transition-colors cursor-pointer group"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {previewUrl ? (
-                  <>
-                    <img
-                      src={previewUrl}
-                      alt="Event Preview"
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Upload className="w-8 h-8 text-white" />
-                    </div>
-                  </>
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-500">Etkinlik görseli yüklemek için tıklayın</p>
-                    <p className="text-xs text-gray-400 mt-1">JPG, PNG veya GIF • Max 2MB</p>
-                  </div>
-                )}
-              </div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleImageUpload}
+              <ImageUpload
+                currentImage={previewUrl}
+                onImageChange={(file) => {
+                  if (file) {
+                    setEventData(prev => ({ ...prev, image: file }))
+                    const reader = new FileReader()
+                    reader.onloadend = () => {
+                      setPreviewUrl(reader.result as string)
+                    }
+                    reader.readAsDataURL(file)
+                  }
+                }}
               />
             </motion.div>
 

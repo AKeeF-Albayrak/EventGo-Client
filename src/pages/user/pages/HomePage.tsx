@@ -1,46 +1,17 @@
 import { useAuth } from '../../../contexts/AuthContext';
-import { useState, useEffect } from 'react';
+import { useEvent } from '../../../contexts/EventContext';
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, MapPin, Users } from 'lucide-react';
+import { Calendar, Clock, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-interface Event {
-  id: number;
-  name: string;
-  date: string;
-  time: string;
-  location: string;
-  participants: number;
-  image: string;
-}
+import concertImage from '@/assets/concert-deafultEventImage.jpg';
 
 const HomePage = () => {
   const { user } = useAuth();
-  const [participatedEvents, setParticipatedEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { events, isLoading, fetchCurrentEvents } = useEvent();
 
   useEffect(() => {
-    const fetchParticipatedEvents = async () => {
-      // API çağrısı simülasyonu
-      setTimeout(() => {
-        const events = [
-          {
-            id: 1,
-            name: 'Tech Conference 2024',
-            date: '2024-05-15',
-            time: '10:00',
-            location: 'İstanbul',
-            participants: 250,
-            image: 'https://source.unsplash.com/random/800x600/?tech'
-          },
-          // Daha fazla etkinlik eklenebilir
-        ];
-        setParticipatedEvents(events);
-        setIsLoading(false);
-      }, 1000);
-    };
-
-    fetchParticipatedEvents();
+    fetchCurrentEvents();
   }, []);
 
   const containerVariants = {
@@ -80,12 +51,15 @@ const HomePage = () => {
         <h2 className="text-2xl font-bold mb-6">Katıldığın Etkinlikler</h2>
         
         {isLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500" />
-          </div>
-        ) : (
+          <motion.div 
+            className="flex justify-center items-center h-40"
+            variants={itemVariants}
+          >
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-200 border-t-purple-500" />
+          </motion.div>
+        ) : events.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {participatedEvents.map((event) => (
+            {events.map((event) => (
               <motion.div
                 key={event.id}
                 className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
@@ -94,28 +68,27 @@ const HomePage = () => {
               >
                 <Link to={`/events/${event.id}`}>
                   <img 
-                    src={event.image} 
+                    src={event.image || concertImage} 
                     alt={event.name}
                     className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = concertImage;
+                    }}
                   />
                   <div className="p-6">
                     <h3 className="text-xl font-semibold mb-3">{event.name}</h3>
                     <div className="space-y-2 text-gray-600">
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 mr-2" />
-                        <span>{event.date}</span>
+                        <span>{new Date(event.date).toLocaleDateString('tr-TR')}</span>
                       </div>
                       <div className="flex items-center">
                         <Clock className="w-4 h-4 mr-2" />
-                        <span>{event.time}</span>
+                        <span>{event.duration} dakika</span>
                       </div>
                       <div className="flex items-center">
                         <MapPin className="w-4 h-4 mr-2" />
-                        <span>{event.location}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Users className="w-4 h-4 mr-2" />
-                        <span>{event.participants} Katılımcı</span>
+                        <span>{event.city}, {event.country}</span>
                       </div>
                     </div>
                   </div>
@@ -123,6 +96,20 @@ const HomePage = () => {
               </motion.div>
             ))}
           </div>
+        ) : (
+          <motion.div 
+            className="bg-white rounded-xl shadow-lg p-8 text-center"
+            variants={itemVariants}
+          >
+            <h3 className="text-xl font-semibold mb-4">Henüz bir etkinliğe katılmadınız.</h3>
+            <p className="text-gray-600 mb-6">Hemen yeni etkinliklere göz atın ve maceraya atılın!</p>
+            <Link 
+              to="/events" 
+              className="bg-purple-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-purple-600 transition-colors duration-300"
+            >
+              Etkinlikleri Keşfet
+            </Link>
+          </motion.div>
         )}
       </motion.div>
     </motion.div>

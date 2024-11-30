@@ -66,11 +66,11 @@ const Footer: React.FC = () => {
   const quickLinks = {
     'Keşfet': [
       { label: 'Ana Sayfa', path: '/home' },
-      { label: 'Şehir Etkinlikleri', path: '/city-events' },
+      { label: 'Şehrimdeki Etkinlikler', path: '/city-events' },
       { label: 'Yeni Etkinlik Oluştur', path: '/create-event' },
     ],
     'Profilim': [
-      { label: 'Katıldığım Etkinlikler', path: '/profile/events' },
+      { label: 'Geçmiş Etkinliklerim', path: '/profile/events' },
       { label: 'Oluşturduğum Etkinlikler', path: '/profile/my-events' },
       { label: 'Puan Geçmişi', path: '/profile/points' },
     ],

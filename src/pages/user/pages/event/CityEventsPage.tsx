@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from 'react-router-dom';
+import concertImage from '@/assets/concert-deafultEventImage.jpg';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -153,11 +154,13 @@ export default function CityEventsPage() {
               whileHover={{ y: -5 }}
             >
               <Link to={`/events/${event.id}`}>
-                <img
-                  src={event.image || 'https://source.unsplash.com/random/800x600/?event'}
-                  alt={event.name}
-                  className="w-full h-48 object-cover"
-                />
+                <div className="aspect-video w-full overflow-hidden">
+                  <img
+                    src={event.image || concertImage}
+                    alt={event.name}
+                    className="w-full h-48 object-cover"
+                  />
+                </div>
                 <div className="p-6">
                   <h3 className="text-xl font-semibold mb-3">{event.name}</h3>
                   <p className="text-gray-600 mb-4 line-clamp-2">{event.description}</p>

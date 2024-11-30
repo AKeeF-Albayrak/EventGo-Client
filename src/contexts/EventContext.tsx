@@ -21,9 +21,11 @@ interface Event {
 interface EventContextType {
   events: Event[];
   userEvents: Event[];
+  allEvents: Event[];
   isLoading: boolean;
-  fetchEvents: () => Promise<void>;
-  fetchUserEvents: () => Promise<void>;
+  fetchCurrentEvents: () => Promise<void>;
+  fetchPastEvents: () => Promise<void>;
+  fetchAllEvents: () => Promise<void>;
   addEvent: (eventData: FormData) => Promise<void>;
   updateEvent: (event: Event) => Promise<void>;
   deleteEvent: (eventId: string) => Promise<void>;
@@ -44,36 +46,58 @@ export const useEvent = () => {
 export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [userEvents, setUserEvents] = useState<Event[]>([]);
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchEvents = async () => {
+  const fetchCurrentEvents = async () => {
     try {
       setIsLoading(true);
-      const response = await axiosInstance.get('/Event/GetEventsForUser');
+      const response = await axiosInstance.get('/Event/GetUsersCurrentEvents');
       if (response.data.success) {
-        setEvents(response.data.events);
+        const eventsWithImages = response.data.events.map((event: Event) => ({
+          ...event,
+          image: event.image ? `data:image/jpeg;base64,${event.image}` : null
+        }));
+        setEvents(eventsWithImages);
       } else {
         throw new Error(response.data.message);
       }
     } catch (error) {
-      console.error('Etkinlikler getirilemedi:', error);
+      console.error('Mevcut etkinlikler getirilemedi:', error);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchUserEvents = async () => {
+  const fetchPastEvents = async () => {
     try {
       setIsLoading(true);
-      const response = await axiosInstance.get('/Event/GetUserEvents');
+      const response = await axiosInstance.get('/Event/GetUsersPastEvents');
       if (response.data.success) {
         setUserEvents(response.data.events);
       } else {
         throw new Error(response.data.message);
       }
     } catch (error) {
-      console.error('Kullanıcı etkinlikleri getirilemedi:', error);
+      console.error('Geçmiş etkinlikler getirilemedi:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchAllEvents = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axiosInstance.get('/Event/GetEventsForUser');
+      if (response.data.success) {
+        setAllEvents(response.data.events);
+      } else {
+        throw new Error(response.data.message);
+      }
+    } catch (error) {
+      console.error('Tüm etkinlikler getirilemedi:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -82,19 +106,51 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const addEvent = async (eventData: FormData) => {
     try {
-      const response = await axiosInstance.post('/Event/AddEvent', eventData, {
+      // FormData'dan JSON objesine dönüştürme
+      const imageFile = eventData.get('Image') as File;
+      
+      // Base64'e dönüştürme
+      const base64Image = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result as string;
+          // Base64 string'in data:image/jpeg;base64, kısmını kaldır
+          resolve(base64String.split(',')[1]);
+        };
+        reader.readAsDataURL(imageFile);
+      });
+
+      const eventPayload = {
+        name: eventData.get('Name'),
+        description: eventData.get('Description'),
+        date: eventData.get('Date'),
+        duration: Number(eventData.get('Duration')),
+        address: eventData.get('Address'),
+        city: eventData.get('City'),
+        country: eventData.get('Country'),
+        latitude: Number(eventData.get('Latitude')),
+        longitude: Number(eventData.get('Longitude')),
+        category: Number(eventData.get('Category')),
+        image: base64Image
+      };
+
+      const response = await axiosInstance.post('/Event/AddEvent', eventPayload, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+          'Content-Type': 'application/json'
+        }
       });
       
-      if (response.data.success) {
-        await fetchEvents(); // Etkinlik listesini güncelle
-      } else {
-        throw new Error(response.data.message);
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Etkinlik eklenirken bir hata oluştu');
       }
+      
+      console.log('Sunucu yanıtı:', response.data);
+      
+      await fetchCurrentEvents();
+      return response.data;
+      
     } catch (error) {
-      console.error('Etkinlik eklenemedi:', error);
+      console.error('Etkinlik eklenirken hata:', error);
       throw error;
     }
   };
@@ -133,7 +189,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const response = await axiosInstance.post('/Event/JoinEvent', { eventId });
       if (response.data.success) {
-        await fetchUserEvents(); // Kullanıcının etkinlik listesini güncelle
+        await fetchPastEvents(); // Kullanıcının etkinlik listesini güncelle
       } else {
         throw new Error(response.data.message);
       }
@@ -147,7 +203,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const response = await axiosInstance.post('/Event/LeaveEvent', { eventId });
       if (response.data.success) {
-        await fetchUserEvents(); // Kullanıcının etkinlik listesini güncelle
+        await fetchPastEvents(); // Kullanıcının etkinlik listesini güncelle
       } else {
         throw new Error(response.data.message);
       }
@@ -161,9 +217,11 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <EventContext.Provider value={{
       events,
       userEvents,
+      allEvents,
       isLoading,
-      fetchEvents,
-      fetchUserEvents,
+      fetchCurrentEvents,
+      fetchPastEvents,
+      fetchAllEvents,
       addEvent,
       updateEvent,
       deleteEvent,
