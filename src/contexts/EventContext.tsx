@@ -46,6 +46,7 @@ export const useEvent = () => {
 export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [userEvents, setUserEvents] = useState<Event[]>([]);
+  const [pastEvents, setPastEvents] = useState<Event[]>([]);
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -75,7 +76,11 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setIsLoading(true);
       const response = await axiosInstance.get('/Event/GetUsersPastEvents');
       if (response.data.success) {
-        setUserEvents(response.data.events);
+        const pastEventsWithImages = response.data.events.map((event: Event) => ({
+          ...event,
+          image: event.image ? `data:image/jpeg;base64,${event.image}` : null
+        }));
+        setPastEvents(pastEventsWithImages);
       } else {
         throw new Error(response.data.message);
       }

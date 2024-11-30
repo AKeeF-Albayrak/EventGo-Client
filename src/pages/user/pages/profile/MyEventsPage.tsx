@@ -5,7 +5,7 @@ import { tr } from 'date-fns/locale';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import concertImage from '@/assets/concert-deafultEventImage.jpg';
+
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -67,13 +67,10 @@ export default function MyEventsPage() {
             >
               <Link to={`/events/${event.id}`}>
                 <div className="aspect-video w-full overflow-hidden">
-                  <img 
-                    src={event.image || concertImage} 
+                <img 
+                    src={event.image } 
                     alt={event.name}
                     className="w-full h-48 object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = concertImage;
-                    }}
                   />
                 </div>
                 <div className="p-6">
