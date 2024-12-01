@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { LayoutGrid, List, Edit } from 'lucide-react'
 import { useAdmin } from '@/contexts/AdminContext'
+import axiosInstance from '@/contexts/AxiosInstance'
+import { toast } from 'react-toastify'
 
 interface Event {
   id: string;
@@ -29,15 +31,22 @@ export function AllEventsContent() {
   const navigate = useNavigate()
 
   if (isLoading) {
-    return <div>Yükleniyor...</div>
+    return <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>
   }
 
   if (approvedEvents.length === 0) {
     return <div>Onaylanmış etkinlik bulunmamaktadır.</div>
   }
 
-  const handleEdit = (eventId: string) => {
-    navigate(`/admin/events/edit/${eventId}`)
+  const handleEdit = async (eventId: string) => {
+    try {
+      navigate(`/admin/events/edit/${eventId}`)
+    } catch (error) {
+      console.error('Yönlendirme hatası:', error)
+      toast.error('Düzenleme sayfasına yönlendirilemedi. Lütfen tekrar deneyin.')
+    }
   }
 
   return (

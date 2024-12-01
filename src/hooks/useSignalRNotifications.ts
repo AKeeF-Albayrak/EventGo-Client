@@ -19,7 +19,7 @@ export function useSignalRNotifications(hubUrl: string) {
 
         // Sunucudan bildirim alındığında
         connection.on('ReceiveNotification', (message: string) => {
-          console.log("Message received from SignalR:", message);
+          console.log("Message received from SignalR:", message); //Burada get request atsın
           setNotifications((prev) => [...prev, message]);
         });
       })

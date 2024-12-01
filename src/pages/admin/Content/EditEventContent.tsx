@@ -14,7 +14,6 @@ import Swal from 'sweetalert2'
 import { ImageUpload } from './ImageUpload'
 
 
-
 export function EditEventContent() {
   const { eventId } = useParams()
   const navigate = useNavigate()
