@@ -41,6 +41,7 @@ interface EventFormData {
   name: string;
   description: string;
   date: Date | null;
+  time: string;
   duration: number;
   address: string;
   city: string;
@@ -74,6 +75,7 @@ export default function CreateEventPage() {
     name: '',
     description: '',
     date: null,
+    time: '',
     duration: 0,
     address: '',
     city: '',
@@ -86,6 +88,7 @@ export default function CreateEventPage() {
   const { addEvent } = useEvent();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedTime, setSelectedTime] = useState<string>('');
   const [mapCenter, setMapCenter] = useState({ lat: 39.9334, lng: 32.8597 });
   const [selectedLocation, setSelectedLocation] = useState<google.maps.LatLngLiteral | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('')
@@ -212,7 +215,12 @@ export default function CreateEventPage() {
       const formData = new FormData();
       formData.append('Name', eventData.name);
       formData.append('Description', eventData.description);
-      formData.append('Date', eventData.date.toISOString());
+      if (eventData.date) {
+        const [hours, minutes] = selectedTime.split(':');
+        const combinedDateTime = new Date(eventData.date);
+        combinedDateTime.setHours(parseInt(hours), parseInt(minutes));
+        formData.append('Date', combinedDateTime.toISOString());
+      }
       formData.append('Duration', eventData.duration.toString());
       formData.append('Address', eventData.address);
       formData.append('City', eventData.city);
@@ -341,6 +349,17 @@ export default function CreateEventPage() {
                       />
                     </PopoverContent>
                   </Popover>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="time" className="text-base font-medium">Saat</Label>
+                  <Input
+                    id="time"
+                    type="time"
+                    className="h-11"
+                    value={selectedTime}
+                    onChange={(e) => setSelectedTime(e.target.value)}
+                    required
+                  />
                 </div>
 
                 <div className="space-y-2">
