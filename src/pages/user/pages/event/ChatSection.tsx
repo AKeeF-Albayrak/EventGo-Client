@@ -7,7 +7,8 @@ import { RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
-import { formatMessageTime, formatDateHeader, isSameDay } from '@/utils/date'
+import { parseISO, format, isValid } from 'date-fns'
+import { tr } from 'date-fns/locale'
 
 interface Message {
   id: string
@@ -39,7 +40,14 @@ export default function ChatSection({ eventId }: ChatSectionProps) {
         }
       });
       if (response.data.success) {
-        setMessages(response.data.messages);
+        const formattedMessages = response.data.messages.map((msg: any) => ({
+          id: msg.id,
+          userId: msg.senderId,
+          userName: msg.username,
+          content: msg.text,
+          timestamp: new Date(msg.sendingTime).toISOString()
+        }));
+        setMessages(formattedMessages);
       }
     } catch (error) {
       console.error('Mesajlar alınamadı:', error);
@@ -76,6 +84,25 @@ export default function ChatSection({ eventId }: ChatSectionProps) {
     }
   };
 
+  const formatMessageTime = (timestamp: string) => {
+    const date = parseISO(timestamp);
+    return isValid(date) ? format(date, 'HH:mm', { locale: tr }) : '';
+  };
+
+  const formatDateHeader = (timestamp: string) => {
+    const date = parseISO(timestamp);
+    return isValid(date) ? format(date, 'd MMMM yyyy', { locale: tr }) : '';
+  };
+
+  const isSameDay = (date1: string, date2: string) => {
+    const d1 = parseISO(date1);
+    const d2 = parseISO(date2);
+    return isValid(d1) && isValid(d2) && 
+           d1.getDate() === d2.getDate() &&
+           d1.getMonth() === d2.getMonth() &&
+           d1.getFullYear() === d2.getFullYear();
+  };
+
   const renderMessages = () => {
     return messages.map((message, index) => {
       const showDateHeader = index === 0 || !isSameDay(messages[index - 1].timestamp, message.timestamp);
@@ -108,6 +135,7 @@ export default function ChatSection({ eventId }: ChatSectionProps) {
       );
     });
   };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

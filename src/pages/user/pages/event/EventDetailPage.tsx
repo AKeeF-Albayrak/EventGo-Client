@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useEvent } from '../../../../contexts/EventContext';
+import type { Event } from '../../../../contexts/EventContext';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, MapPin } from 'lucide-react';
@@ -8,7 +9,7 @@ import ChatSection from './ChatSection';
 const EventDetailPage = () => {
   const { eventId } = useParams();
   const { events, isLoading, fetchCurrentEvents } = useEvent();
-  const [event, setEvent] = useState(null);
+  const [event, setEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     fetchCurrentEvents();

@@ -46,7 +46,6 @@ export const useEvent = () => {
 export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [userEvents, setUserEvents] = useState<Event[]>([]);
-  const [pastEvents, setPastEvents] = useState<Event[]>([]);
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -80,7 +79,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           ...event,
           image: event.image ? `data:image/jpeg;base64,${event.image}` : null
         }));
-        setPastEvents(pastEventsWithImages);
+        setUserEvents(pastEventsWithImages);
       } else {
         throw new Error(response.data.message);
       }
@@ -96,10 +95,12 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       setIsLoading(true);
       const response = await axiosInstance.get('/Event/GetEventsForUser');
-      if (response.data.success) {
-        setAllEvents(response.data.events);
-      } else {
-        throw new Error(response.data.message);
+      if (response.data.events) {
+        const eventsWithImages = response.data.events.map((event: Event) => ({
+          ...event,
+          image: event.image ? `data:image/jpeg;base64,${event.image}` : null
+        }));
+        setAllEvents(eventsWithImages);
       }
     } catch (error) {
       console.error('Tüm etkinlikler getirilemedi:', error);

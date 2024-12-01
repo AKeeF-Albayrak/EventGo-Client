@@ -104,7 +104,7 @@ const HomePage = () => {
             <h3 className="text-xl font-semibold mb-4">Henüz bir etkinliğe katılmadınız.</h3>
             <p className="text-gray-600 mb-6">Hemen yeni etkinliklere göz atın ve maceraya atılın!</p>
             <Link 
-              to="/events" 
+              to="/city-events" 
               className="bg-purple-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-purple-600 transition-colors duration-300"
             >
               Etkinlikleri Keşfet
@@ -117,4 +117,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-

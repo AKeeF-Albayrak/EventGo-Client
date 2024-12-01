@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-// import { useEvent } from '@/contexts/EventContext';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, MapPin, Users, Search, Filter } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from 'react-router-dom';
-import concertImage from '@/assets/concert-deafultEventImage.jpg';
+import concertImage from '@/assets/concert-defaultEventImage.jpg';
+import { useEvent } from '@/contexts/EventContext';
+import Swal from 'sweetalert2';
+import axiosInstance from '@/contexts/AxiosInstance';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -26,76 +28,54 @@ const itemVariants = {
   }
 };
 
-// Mock data for events
-const mockEvents = [
-  {
-    id: '1',
-    name: 'Summer Music Festival',
-    description: 'A vibrant celebration of music featuring local and international artists.',
-    date: '2024-07-15',
-    duration: 480,
-    address: 'Central Park, Istanbul',
-    image: 'https://source.unsplash.com/random/800x600/?concert',
-    category: '1'
-  },
-  {
-    id: '2',
-    name: 'Tech Conference 2024',
-    description: 'Explore the latest innovations in technology and digital transformation.',
-    date: '2024-09-22',
-    duration: 480,
-    address: 'Istanbul Congress Center',
-    image: 'https://source.unsplash.com/random/800x600/?technology',
-    category: '4'
-  },
-  {
-    id: '3',
-    name: 'Istanbul Marathon',
-    description: 'Join thousands of runners in this annual city-wide running event.',
-    date: '2024-11-03',
-    duration: 300,
-    address: 'Sultanahmet Square, Istanbul',
-    image: 'https://source.unsplash.com/random/800x600/?marathon',
-    category: '2'
-  },
-  {
-    id: '4',
-    name: 'Modern Art Exhibition',
-    description: 'A showcase of contemporary art from emerging Turkish artists.',
-    date: '2024-08-10',
-    duration: 180,
-    address: 'Istanbul Modern, Karaköy',
-    image: 'https://source.unsplash.com/random/800x600/?art',
-    category: '3'
-  }
-];
-
 export default function CityEventsPage() {
-  // const { events, isLoading, fetchEvents } = useEvent();
-  const [events, setEvents] = useState(mockEvents);
-  const [isLoading, setIsLoading] = useState(false);
+  const { allEvents, isLoading, fetchAllEvents } = useEvent();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [filteredEvents, setFilteredEvents] = useState(events);
+  const [filteredEvents, setFilteredEvents] = useState([]);
 
   useEffect(() => {
-    // Simulating data fetching
-    setIsLoading(true);
-    setTimeout(() => {
-      setEvents(mockEvents);
-      setIsLoading(false);
-    }, 1000);
+    fetchAllEvents();
   }, []);
 
+  const handleJoinEvent = async (eventId: string) => {
+    try {
+      const response = await axiosInstance.post('/Event/JoinEvent', {
+        eventId: eventId
+      });
+
+      if (response.data.success) {
+        Swal.fire({
+          title: 'Başarılı!',
+          text: 'Etkinliğe başarıyla katıldınız!',
+          icon: 'success',
+          confirmButtonText: 'Tamam'
+        });
+        fetchAllEvents();
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Hata!',
+        text: 'Etkinliğe katılırken bir hata oluştu.',
+        icon: 'error',
+        confirmButtonText: 'Tamam'
+      });
+    }
+  };
+
   useEffect(() => {
-    const filtered = events.filter(event => {
+    const filtered = allEvents.filter(event => {
       const matchesSearch = event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           event.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory && selectedCategory !== 'all' ? event.category === selectedCategory : true;
+      
+      const matchesCategory = !selectedCategory || selectedCategory === 'all' 
+        ? true 
+        : event.category === parseInt(selectedCategory);
+      
       return matchesSearch && matchesCategory;
     });
     setFilteredEvents(filtered);
-  }, [searchTerm, selectedCategory, events]);
+  }, [searchTerm, selectedCategory, allEvents]);
 
   return (
     <motion.div
@@ -127,10 +107,21 @@ export default function CityEventsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tümü</SelectItem>
+                <SelectItem value="0">Spor</SelectItem>
                 <SelectItem value="1">Müzik</SelectItem>
-                <SelectItem value="2">Spor</SelectItem>
-                <SelectItem value="3">Sanat</SelectItem>
-                <SelectItem value="4">Teknoloji</SelectItem>
+                <SelectItem value="2">Sanat</SelectItem>
+                <SelectItem value="3">Teknoloji</SelectItem>
+                <SelectItem value="4">Bilim</SelectItem>
+                <SelectItem value="5">Edebiyat</SelectItem>
+                <SelectItem value="6">Sinema</SelectItem>
+                <SelectItem value="7">Tiyatro</SelectItem>
+                <SelectItem value="8">Fotoğrafçılık</SelectItem>
+                <SelectItem value="9">Seyahat</SelectItem>
+                <SelectItem value="10">Yemek</SelectItem>
+                <SelectItem value="11">Dans</SelectItem>
+                <SelectItem value="12">Yoga</SelectItem>
+                <SelectItem value="13">Doğa</SelectItem>
+                <SelectItem value="14">Tarih</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -153,34 +144,48 @@ export default function CityEventsPage() {
               variants={itemVariants}
               whileHover={{ y: -5 }}
             >
-              <Link to={`/events/${event.id}`}>
-                <div className="aspect-video w-full overflow-hidden">
-                  <img
-                    src={event.image || concertImage}
-                    alt={event.name}
-                    className="w-full h-48 object-cover"
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-3">{event.name}</h3>
-                  <p className="text-gray-600 mb-4 line-clamp-2">{event.description}</p>
-                  
-                  <div className="space-y-2 text-gray-600">
-                    <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      <span>{new Date(event.date).toLocaleDateString('tr-TR')}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-2" />
-                      <span>{event.duration} dakika</span>
-                    </div>
-                    <div className="flex items-center">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      <span>{event.address}</span>
-                    </div>
+              <img
+                src={event.image || concertImage}
+                alt={event.name}
+                className="w-full h-48 object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = concertImage;
+                }}
+              />
+              <div className="p-6">
+                <h3 className="text-xl font-semibold mb-3">{event.name}</h3>
+                <p className="text-gray-600 mb-4 line-clamp-2">{event.description}</p>
+                
+                <div className="space-y-2 text-gray-600">
+                  <div className="flex items-center">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    <span>{new Date(event.date).toLocaleDateString('tr-TR')}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-2" />
+                    <span>{event.duration} dakika</span>
+                  </div>
+                  <div className="flex items-center">
+                    <MapPin className="w-4 h-4 mr-2" />
+                    <span>{event.address}</span>
                   </div>
                 </div>
-              </Link>
+
+                <div className="mt-4 flex justify-between items-center">
+                  <Link 
+                    to={`/events/${event.id}`}
+                    className="text-purple-600 hover:text-purple-700 font-medium"
+                  >
+                    Detaylar
+                  </Link>
+                  <Button
+                    onClick={() => handleJoinEvent(event.id)}
+                    className="bg-purple-500 hover:bg-purple-600"
+                  >
+                    Katıl
+                  </Button>
+                </div>
+              </div>
             </motion.div>
           ))}
         </motion.div>
