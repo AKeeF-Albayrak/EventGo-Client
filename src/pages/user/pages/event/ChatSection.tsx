@@ -45,7 +45,7 @@ export default function ChatSection({ eventId }: ChatSectionProps) {
           userId: msg.senderId,
           userName: msg.username,
           content: msg.text,
-          timestamp: new Date(msg.sendingTime).toISOString()
+          timestamp: msg.sendingTime
         }));
         setMessages(formattedMessages);
       }
@@ -85,8 +85,13 @@ export default function ChatSection({ eventId }: ChatSectionProps) {
   };
 
   const formatMessageTime = (timestamp: string) => {
-    const date = parseISO(timestamp);
-    return isValid(date) ? format(date, 'HH:mm', { locale: tr }) : '';
+    try {
+      const date = parseISO(timestamp);
+      return isValid(date) ? format(date, 'HH:mm', { locale: tr }) : '';
+    } catch (error) {
+      console.error('Timestamp formatlanırken hata:', timestamp);
+      return '';
+    }
   };
 
   const formatDateHeader = (timestamp: string) => {
@@ -116,22 +121,25 @@ export default function ChatSection({ eventId }: ChatSectionProps) {
               </div>
             </div>
           )}
-          <div
-            className={`p-3 rounded-lg ${
-              message.userId === user?.id
-                ? 'bg-primary/10 ml-auto max-w-[80%]'
-                : 'bg-muted max-w-[80%]'
-            }`}
-          >
-            <div className="flex justify-between items-start mb-1">
-              <p className="font-semibold text-sm">{message.userName}</p>
-              <span className="text-xs text-muted-foreground">
-                {formatMessageTime(message.timestamp)}
-              </span>
+          <div className={`flex ${message.userId === user?.id ? 'justify-end' : 'justify-start'} mb-2`}>
+            <div
+              className={`p-3 rounded-lg inline-block ${
+                message.userId === user?.id
+                  ? 'bg-primary/10'
+                  : 'bg-muted'
+              }`}
+            >
+              <div className="flex justify-between items-start mb-1">
+                <p className="font-semibold text-sm">{message.userName}</p>
+                <span className="text-xs text-muted-foreground ml-2">
+                  {formatMessageTime(message.timestamp)}
+                </span>
+              </div>
+              <p className="text-foreground break-words">{message.content}</p>
             </div>
-            <p className="text-foreground">{message.content}</p>
           </div>
         </div>
+
       );
     });
   };
@@ -171,4 +179,3 @@ export default function ChatSection({ eventId }: ChatSectionProps) {
     </Card>
   )
 }
-

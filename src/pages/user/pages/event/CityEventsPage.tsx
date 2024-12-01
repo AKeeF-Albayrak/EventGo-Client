@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from 'react-router-dom';
-import concertImage from '@/assets/concert-defaultEventImage.jpg';
+import concertImage from '@/assets/concert-deafultEventImage.jpg';
 import { useEvent } from '@/contexts/EventContext';
 import Swal from 'sweetalert2';
 import axiosInstance from '@/contexts/AxiosInstance';
