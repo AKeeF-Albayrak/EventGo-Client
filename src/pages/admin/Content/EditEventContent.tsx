@@ -149,6 +149,25 @@ export function EditEventContent() {
     return <div>Etkinlik bulunamadı.</div>
   }
 
+  // Kategori listesini en üstte tanımlayalım
+  const CATEGORY_MAPPING: { [key: string]: number } = {
+    "Spor": 0,
+    "Müzik": 1,
+    "Sanat": 2,
+    "Teknoloji": 3,
+    "Bilim": 4,
+    "Edebiyat": 5,
+    "Sinema": 6,
+    "Tiyatro": 7,
+    "Fotoğrafçılık": 8,
+    "Seyahat": 9,
+    "Yemek": 10,
+    "Dans": 11,
+    "Yoga": 12,
+    "Doğa": 13,
+    "Tarih": 14
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -164,17 +183,21 @@ export function EditEventContent() {
         <div className="space-y-2">
           <Label htmlFor="category">Kategori</Label>
           <Select
-            value={formData.category.toString()}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, category: parseInt(value) }))}
+            value={Object.keys(CATEGORY_MAPPING)[formData.category]}
+            onValueChange={(value) => setFormData(prev => ({ 
+              ...prev, 
+              category: CATEGORY_MAPPING[value] 
+            }))}
           >
             <SelectTrigger>
               <SelectValue placeholder="Kategori seçin" />
             </SelectTrigger>
             <SelectContent>
-              {/* Kategorileri burada listeleyebilirsiniz */}
-              <SelectItem value="0">Spor</SelectItem>
-              <SelectItem value="1">Müzik</SelectItem>
-              {/* Diğer kategoriler... */}
+              {Object.keys(CATEGORY_MAPPING).map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

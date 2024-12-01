@@ -105,12 +105,6 @@ export default function AdminNavbar() {
                   Geri Bildirimler
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/admin/settings">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Admin Ayarları
-                </Link>
-              </DropdownMenuItem>
               
               <DropdownMenuSeparator />
 

@@ -44,14 +44,12 @@ export default function Navbar() {
     }
   }, [newNotifications]);
 
-  // Navbar items
   const navItems = [
     { to: '/home', icon: Home, label: 'Anasayfa' },
     { to: '/create-event', icon: Plus, label: 'Etkinlik Oluştur' },
     { to: '/city-events', icon: Tickets , label: 'Şehrimdeki Etkinlikler' },
   ];
 
-  // Çıkış yapma işlevi
   const handleLogout = () => {
     Swal.fire({
       title: 'Çıkış yapmak istediğinize emin misiniz?',
@@ -75,13 +73,11 @@ export default function Navbar() {
     });
   };
 
-  // Bildirimleri yükle
   React.useEffect(() => {
     const fetchNotifications = async () => {
       try {
         const response = await axiosInstance.get('/Users/GetNotifications');
         if (response.data.success) {
-          // Sadece silinmemiş bildirimleri göster
           const activeNotifications = response.data.notifications.filter(
             (n: Notification) => !n.isDeleted
           );
@@ -95,13 +91,12 @@ export default function Navbar() {
     fetchNotifications();
   }, []);
 
-  // Bildirimi sil fonksiyonu (markAsRead yerine)
   const deleteNotification = async (notificationId: string) => {
     try {
       const response = await axiosInstance.delete('/Users/DeleteNotifications', {
         data: { 
           id: notificationId,
-          permanentDelete: true // Backend'e kalıcı silme işareti gönder
+          permanentDelete: true
         }
       });
       
@@ -116,7 +111,6 @@ export default function Navbar() {
     }
   };
 
-  // Tarih formatlama yardımcı fonksiyonu ekleyelim
   const formatNotificationDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();

@@ -21,6 +21,8 @@ import { Label } from "@/components/ui/label";
 import { Search } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 
 
 interface User {
@@ -43,6 +45,29 @@ interface User {
   createdTime: string;
   passwordHash?: string;
 }
+
+const AVAILABLE_INTERESTS = [
+  "Spor", "Müzik", "Sanat", "Teknoloji", "Bilim", "Edebiyat", "Sinema",
+  "Tiyatro", "Fotoğrafçılık", "Seyahat", "Yemek", "Dans", "Yoga", "Doğa", "Tarih"
+];
+
+const INTEREST_MAPPING: { [key: string]: number } = {
+  "Spor": 0,
+  "Müzik": 1,
+  "Sanat": 2,
+  "Teknoloji": 3,
+  "Bilim": 4,
+  "Edebiyat": 5,
+  "Sinema": 6,
+  "Tiyatro": 7,
+  "Fotoğrafçılık": 8,
+  "Seyahat": 9,
+  "Yemek": 10,
+  "Dans": 11,
+  "Yoga": 12,
+  "Doğa": 13,
+  "Tarih": 14
+};
 
 export default function UserManagementContent() {
   const [users, setUsers] = useState<User[]>([]);
@@ -98,9 +123,7 @@ export default function UserManagementContent() {
         phoneNumber: updatedUser.phoneNumber,
         image: updatedUser.image,
         passwordHash: updatedUser.passwordHash || "",
-        role: updatedUser.role,
-        birthDate: updatedUser.birthDate,
-        gender: updatedUser.gender
+        role: updatedUser.role
       });
       
       console.log('API Yanıtı:', response.data);
@@ -108,7 +131,7 @@ export default function UserManagementContent() {
       if (response.data.success) {
         toast.success('Kullanıcı başarıyla güncellendi');
         setIsEditDialogOpen(false);
-        await fetchUsers(); // Kullanıcı listesini yeniden yükle
+        await fetchUsers();
       } else {
         toast.error('Güncelleme başarısız: ' + (response.data.message || 'Bilinmeyen hata'));
       }
@@ -149,6 +172,18 @@ export default function UserManagementContent() {
         return 'Admin';
       default:
         return 'Bilinmiyor';
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setEditingUser({ ...editingUser, image: base64String });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -341,34 +376,86 @@ export default function UserManagementContent() {
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="image">Profil Resmi URL</Label>
-                  <Input
-                    id="image"
-                    value={editingUser.image || ''}
-                    onChange={(e) =>
-                      setEditingUser({ ...editingUser, image: e.target.value })
-                    }
-                  />
+                <div className="space-y-4">
+                  <Label>Profil Resmi</Label>
+                  <div className="flex items-center space-x-4">
+                    {editingUser.image ? (
+                      <div className="flex flex-col items-center gap-4">
+                        <img
+                          src={editingUser.image}
+                          alt="Profil resmi"
+                          className="w-32 h-32 rounded-full object-cover border-2 border-gray-200"
+                        />
+                        <div className="flex gap-2">
+                          <Input
+                            id="profileImage"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="hidden"
+                          />
+                          <Label htmlFor="profileImage" className="cursor-pointer">
+                            <Button type="button" variant="outline" size="sm">
+                              Resmi Değiştir
+                            </Button>
+                          </Label>
+                          <Button 
+                            type="button" 
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingUser({ ...editingUser, image: null })}
+                          >
+                            Resmi Kaldır
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center">
+                          <span className="text-gray-400 text-4xl">
+                            {editingUser.name?.charAt(0) || 'U'}
+                          </span>
+                        </div>
+                        <div>
+                          <Input
+                            id="profileImage"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="hidden"
+                          />
+                          <Label htmlFor="profileImage" className="cursor-pointer">
+                            <Button type="button" variant="outline" size="sm">
+                              Resim Yükle
+                            </Button>
+                          </Label>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>İlgi Alanları</Label>
-                <div className="flex flex-wrap gap-2">
-                  {[1, 2, 3, 4, 5].map((interest) => (
-                    <div key={interest} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`interest-${interest}`}
-                        checked={editingUser.interests.includes(interest)}
-                        onCheckedChange={(checked) => {
-                          const newInterests = checked
-                            ? [...editingUser.interests, interest]
-                            : editingUser.interests.filter((i) => i !== interest);
-                          setEditingUser({ ...editingUser, interests: newInterests });
-                        }}
-                      />
-                      <Label htmlFor={`interest-${interest}`}>İlgi Alanı {interest}</Label>
-                    </div>
+                <div className="flex flex-wrap gap-2 p-4 border rounded-md">
+                  {AVAILABLE_INTERESTS.map((interest) => (
+                    <Badge
+                      key={interest}
+                      variant={editingUser.interests.includes(INTEREST_MAPPING[interest]) ? "default" : "outline"}
+                      className="cursor-pointer hover:bg-primary/20 transition-colors duration-200"
+                      onClick={() => {
+                        const interestId = INTEREST_MAPPING[interest];
+                        const newInterests = editingUser.interests.includes(interestId)
+                          ? editingUser.interests.filter(i => i !== interestId)
+                          : [...editingUser.interests, interestId];
+                        setEditingUser({ ...editingUser, interests: newInterests });
+                      }}
+                    >
+                      {interest}
+                      {editingUser.interests.includes(INTEREST_MAPPING[interest]) && (
+                        <X className="w-3 h-3 ml-1" />
+                      )}
+                    </Badge>
                   ))}
                 </div>
               </div>

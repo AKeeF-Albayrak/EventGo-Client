@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedUser = localStorage.getItem('User');
 
       if (token && storedUser) {
-        setUser(JSON.parse(storedUser)); // Kullanıcı bilgilerini state'e yükle
+        setUser(JSON.parse(storedUser));
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);
@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { token, user: userDetails } = response.data;
   
       localStorage.setItem('AccessToken', token); 
-      localStorage.setItem('User', JSON.stringify(userDetails)); // Kullanıcı bilgilerini sakla
+      localStorage.setItem('User', JSON.stringify(userDetails));
       setUser(userDetails); 
       setIsAuthenticated(true);
   
@@ -85,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { token, user: userDetails } = response.data;
   
       localStorage.setItem('AccessToken', token);
-      localStorage.setItem('User', JSON.stringify(userDetails)); // Kullanıcı bilgilerini sakla
+      localStorage.setItem('User', JSON.stringify(userDetails));
       setUser(userDetails);
       setIsAuthenticated(true);
     } catch (error) {
@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    localStorage.removeItem('AccessToken'); // Token’ı ve kullanıcıyı kaldır
+    localStorage.removeItem('AccessToken');
     localStorage.removeItem('User');
     setUser(null); 
     setIsAuthenticated(false);

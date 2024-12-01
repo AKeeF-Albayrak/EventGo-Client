@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { CalendarPlus, Users, FileText, Bell, BarChart2, Settings } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { Badge } from "@/components/ui/badge"
 
 const DashboardPage = () => {
   const { user } = useAuth()
@@ -12,110 +13,120 @@ const DashboardPage = () => {
     totalEvents: 124,
     pendingApproval: 7,
     totalUsers: 1503,
-    activeUsers: 892
+    activeUsers: 892,
+    totalFeedbacks: 18,
+    unreadFeedbacks: 5
   }
 
-  const recentActivities = [
-    { id: 1, action: 'Yeni etkinlik oluşturuldu', time: '2 saat önce' },
-    { id: 2, action: 'Kullanıcı kaydı onaylandı', time: '3 saat önce' },
-    { id: 3, action: 'Etkinlik güncellendi', time: '5 saat önce' },
+  const quickLinks = [
+    {
+      title: 'Etkinlik Yönetimi',
+      items: [
+        { name: 'Onay Bekleyen Etkinlikler', path: '/admin/events-pending', icon: CalendarPlus, count: stats.pendingApproval },
+        { name: 'Tüm Etkinlikler', path: '/admin/all-events', icon: FileText },
+      ]
+    },
+    {
+      title: 'Kullanıcı İşlemleri',
+      items: [
+        { name: 'Kullanıcı Yönetimi', path: '/admin/users', icon: Users, count: stats.totalUsers },
+        { name: 'Geri Bildirimler', path: '/admin/feedbacks', icon: Bell, count: stats.unreadFeedbacks },
+      ]
+    },
+    {
+      title: 'Sistem',
+      items: [
+        { name: 'İstatistikler', path: '/admin/statistics', icon: BarChart2 },
+        { name: 'Sistem Ayarları', path: '/admin/settings', icon: Settings },
+      ]
+    }
   ]
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Kontrol Paneli</h1>
-      <p className="text-lg">Merhaba, {user?.name || 'Yönetici'}! EventGo yönetim paneline hoş geldiniz.</p>
+    <div className="space-y-8 p-8">
+      <div className="flex flex-col space-y-2">
+        <h1 className="text-4xl font-bold tracking-tight">Kontrol Paneli</h1>
+        <p className="text-lg text-muted-foreground">
+          Hoş geldiniz, {user?.name || 'Yönetici'}! EventGo yönetim panelinde neler yapmak istersiniz?
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam Etkinlikler</CardTitle>
-            <CalendarPlus className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalEvents}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.pendingApproval} onay bekleyen
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam Kullanıcılar</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.activeUsers} aktif kullanıcı
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Raporlar</CardTitle>
-            <BarChart2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">
-              Yeni rapor mevcut
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Bildirimler</CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">5</div>
-            <p className="text-xs text-muted-foreground">
-              Yeni bildirim
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {quickLinks.map((section, idx) => (
+          <Card key={idx} className="hover:shadow-lg transition-shadow duration-300">
+            <CardHeader>
+              <CardTitle className="text-xl">{section.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {section.items.map((item, itemIdx) => (
+                <Button
+                  key={itemIdx}
+                  asChild
+                  variant="ghost"
+                  className="w-full justify-start hover:bg-primary/10 relative"
+                >
+                  <Link to={item.path} className="flex items-center space-x-3">
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.name}</span>
+                    {item.count !== undefined && (
+                      <Badge variant="secondary" className="ml-auto">
+                        {item.count}
+                      </Badge>
+                    )}
+                  </Link>
+                </Button>
+              ))}
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="col-span-1">
+        <Card>
           <CardHeader>
-            <CardTitle>Hızlı İşlemler</CardTitle>
-            <CardDescription>Sık kullanılan yönetici işlemleri</CardDescription>
+            <CardTitle>Son Aktiviteler</CardTitle>
+            <CardDescription>Son 24 saat içindeki işlemler</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4">
-            <Button asChild className="w-full">
-              <Link to="/admin/events-pending">
-                <FileText className="mr-2 h-4 w-4" /> Onay Bekleyen Etkinlikler
-              </Link>
-            </Button>
-            <Button asChild className="w-full">
-              <Link to="/admin/users">
-                <Users className="mr-2 h-4 w-4" /> Kullanıcı Yönetimi
-              </Link>
-            </Button>
-            <Button asChild className="w-full">
-              <Link to="/admin/settings">
-                <Settings className="mr-2 h-4 w-4" /> Sistem Ayarları
-              </Link>
-            </Button>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { text: 'Yeni etkinlik oluşturuldu', time: '2 saat önce', type: 'event' },
+                { text: 'Kullanıcı kaydı onaylandı', time: '3 saat önce', type: 'user' },
+                { text: 'Yeni geri bildirim alındı', time: '5 saat önce', type: 'feedback' },
+              ].map((activity, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted">
+                  <span className="text-sm">{activity.text}</span>
+                  <span className="text-xs text-muted-foreground">{activity.time}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="col-span-1">
+        <Card>
           <CardHeader>
-            <CardTitle>Son Aktiviteler</CardTitle>
-            <CardDescription>Sistemdeki son değişiklikler</CardDescription>
+            <CardTitle>Hızlı İstatistikler</CardTitle>
+            <CardDescription>Genel sistem durumu</CardDescription>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-4">
-              {recentActivities.map((activity) => (
-                <li key={activity.id} className="flex justify-between items-center">
-                  <span>{activity.action}</span>
-                  <span className="text-sm text-muted-foreground">{activity.time}</span>
-                </li>
-              ))}
-            </ul>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Toplam Etkinlik</p>
+                <p className="text-2xl font-bold">{stats.totalEvents}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Aktif Kullanıcı</p>
+                <p className="text-2xl font-bold">{stats.activeUsers}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Bekleyen Onay</p>
+                <p className="text-2xl font-bold">{stats.pendingApproval}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Yeni Bildirim</p>
+                <p className="text-2xl font-bold">{stats.unreadFeedbacks}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
