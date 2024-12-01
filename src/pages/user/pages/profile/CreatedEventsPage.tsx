@@ -6,6 +6,8 @@ import { Calendar, Clock, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import concertImage from '@/assets/concert-deafultEventImage.jpg';
+import { Badge } from "@/components/ui/badge"
+import { CheckCircle, Clock as ClockIcon } from 'lucide-react';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -66,7 +68,7 @@ export default function CreatedEventsPage() {
             whileHover={{ y: -5 }}
           >
             <Link to={`/events/${event.id}`}>
-              <div className="aspect-video w-full overflow-hidden">
+              <div className="w-full overflow-hidden">
                 <img 
                   src={event.image || concertImage} 
                   alt={event.name}
@@ -77,7 +79,25 @@ export default function CreatedEventsPage() {
                 />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold mb-3">{event.name}</h3>
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-xl font-semibold">{event.name}</h3>
+                  <Badge 
+                    variant={event.isApproved === true ? "success" : "secondary"}
+                    className="flex items-center gap-1"
+                  >
+                    {event.isApproved === true ? (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        Onaylandı
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="w-4 h-4" />
+                        Onay Bekliyor
+                      </>
+                    )}
+                  </Badge>
+                </div>
                 <p className="text-gray-600 mb-4 line-clamp-2">{event.description}</p>
                 <div className="space-y-2 text-gray-600">
                   <div className="flex items-center">
@@ -90,7 +110,7 @@ export default function CreatedEventsPage() {
                   </div>
                   <div className="flex items-center">
                     <MapPin className="w-4 h-4 mr-2" />
-                    <span>{event.address}</span>
+                    <span>{event.city}, {event.country}</span>
                   </div>
                 </div>
               </div>

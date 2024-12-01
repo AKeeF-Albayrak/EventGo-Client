@@ -19,7 +19,16 @@ const UserRoutes = () => (
     <Route path="profile/points" element={<PointsHistoryPage />} />
     <Route path="profile/settings" element={<SettingsPage />} />
     <Route path="feedback" element={<FeedbackPage />} />
-    <Route path="events/:eventId" element={<EventDetailPage />} />
+    <Route 
+      path="events/:eventId" 
+      element={
+        <EventDetailPage />
+      } 
+    />
+    <Route 
+      path="profile/events/:eventId" 
+      element={<EventDetailPage isPastEvent={true} />} 
+    />
   </Routes>
 )
 

@@ -340,51 +340,7 @@ export default function UserManagementContent() {
                     }
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="birthDate">Doğum Tarihi</Label>
-                  <Input
-                    id="birthDate"
-                    type="date"
-                    value={editingUser.birthDate.split('T')[0]}
-                    onChange={(e) =>
-                      setEditingUser({ ...editingUser, birthDate: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gender">Cinsiyet</Label>
-                  <Select
-                    value={editingUser.gender ? "true" : "false"}
-                    onValueChange={(value) =>
-                      setEditingUser({ ...editingUser, gender: value === "true" })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Cinsiyet seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="true">Erkek</SelectItem>
-                      <SelectItem value="false">Kadın</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Rol</Label>
-                  <Select
-                    value={editingUser.role.toString()}
-                    onValueChange={(value) =>
-                      setEditingUser({ ...editingUser, role: parseInt(value) })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Rol seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">Kullanıcı</SelectItem>
-                      <SelectItem value="1">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="image">Profil Resmi URL</Label>
                   <Input

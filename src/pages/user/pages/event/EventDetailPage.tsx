@@ -17,6 +17,7 @@ import RouteMap from '@/components/maps/RouteMap';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '@/contexts/AxiosInstance';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface RouteInfo {
   walkingRoute: {
@@ -31,28 +32,51 @@ interface RouteInfo {
   };
 }
 
-const EventDetailPage = () => {
+interface EventDetailPageProps {
+  isPastEvent?: boolean;
+}
+
+const EventDetailPage = ({ isPastEvent = false }: EventDetailPageProps) => {
   const { eventId } = useParams();
-  const { events, isLoading, fetchCurrentEvents } = useEvent();
+  const { events, createdEvents, userEvents, isLoading, fetchCurrentEvents, fetchCreatedEvents, fetchPastEvents } = useEvent();
   const [event, setEvent] = useState<Event | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [userLocation, setUserLocation] = useState<{lat: number; lon: number} | null>(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   if (!eventId) return <div>Etkinlik bulunamadı</div>;
 
   useEffect(() => {
-    fetchCurrentEvents();
-  }, []);
+    const loadEventData = async () => {
+      try {
+        if (isPastEvent) {
+          await fetchPastEvents();
+        } else {
+          await Promise.all([
+            fetchCurrentEvents(),
+            fetchCreatedEvents()
+          ]);
+        }
+      } catch (error) {
+        console.error('Error loading event data:', error);
+      }
+    };
+    
+    loadEventData();
+  }, [eventId, isPastEvent]);
 
   useEffect(() => {
-    if (events) {
-      const foundEvent = events.find((e) => e.id === eventId);
-      setEvent(foundEvent || null);
+    const foundEvent = isPastEvent
+      ? userEvents?.find(e => e.id === eventId)
+      : events?.find(e => e.id === eventId) || createdEvents?.find(e => e.id === eventId);
+    
+    if (foundEvent) {
+      setEvent(foundEvent);
     }
-  }, [events, eventId]);
+  }, [events, createdEvents, userEvents, eventId, isPastEvent]);
 
   useEffect(() => {
     // Kullanıcının konumunu al
@@ -131,10 +155,59 @@ const EventDetailPage = () => {
     }
   };
 
-  if (isLoading || !event) {
+  const handleDeleteEvent = async () => {
+    const result = await Swal.fire({
+      title: 'Emin misiniz?',
+      text: 'Bu etkinliği silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Evet, sil',
+      cancelButtonText: 'İptal',
+      confirmButtonColor: '#d33',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await axiosInstance.delete(`/api/Event/DeleteEvent`);
+
+        if (response.data.success) {
+          await fetchCreatedEvents();
+          await Swal.fire({
+            title: 'Başarılı!',
+            text: 'Etkinlik başarıyla silindi',
+            icon: 'success',
+            timer: 1500
+          });
+          navigate('/profile/my-events');
+        } else {
+          throw new Error(response.data.message || 'Etkinlik silinemedi');
+        }
+      } catch (error) {
+        console.error('Etkinlik silme hatası:', error);
+        await Swal.fire({
+          title: 'Hata!',
+          text: 'Etkinlik silinirken bir hata oluştu',
+          icon: 'error'
+        });
+      }
+    }
+  };
+
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-200 border-t-purple-500" />
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold">Etkinlik bulunamadı</h2>
+          <p className="text-gray-600 mt-2">İstediğiniz etkinlik mevcut değil veya erişim izniniz yok.</p>
+        </div>
       </div>
     );
   }
@@ -183,13 +256,23 @@ const EventDetailPage = () => {
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <Badge className="mb-2">Aktif Etkinlik</Badge>
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={handleLeaveEvent}
-                    >
-                      Etkinlikten Çık
-                    </Button>
+                    {createdEvents?.find(e => e.id === eventId) ? (
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={handleDeleteEvent}
+                      >
+                        Etkinliği Sil
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={handleLeaveEvent}
+                      >
+                        Etkinlikten Çık
+                      </Button>
+                    )}
                   </div>
                   <h1 className="text-3xl font-bold text-gray-800">{event.name}</h1>
                 </div>

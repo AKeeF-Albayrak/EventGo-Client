@@ -65,7 +65,7 @@ export default function MyEventsPage() {
             variants={itemVariants}
             whileHover={{ y: -5 }}
           >
-            <Link to={`/events/${event.id}`}>
+            <Link to={`/profile/events/${event.id}`}>
               <div className="aspect-video w-full overflow-hidden">
                 <img 
                   src={event.image || concertImage} 
