@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, MapPin, Users, Share2, Heart, X } from 'lucide-react';
 import ChatSection from './ChatSection';
-import { Dialog, DialogContent, DialogOverlay } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -15,6 +14,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Car } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import RouteMap from '@/components/maps/RouteMap';
+import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
+import axiosInstance from '@/contexts/AxiosInstance';
 
 interface RouteInfo {
   walkingRoute: {
@@ -33,11 +35,11 @@ const EventDetailPage = () => {
   const { eventId } = useParams();
   const { events, isLoading, fetchCurrentEvents } = useEvent();
   const [event, setEvent] = useState<Event | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [userLocation, setUserLocation] = useState<{lat: number; lon: number} | null>(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  const navigate = useNavigate();
 
   if (!eventId) return <div>Etkinlik bulunamadı</div>;
 
@@ -89,6 +91,46 @@ const EventDetailPage = () => {
     fetchRouteInfo();
   }, [userLocation, event]);
 
+  const handleLeaveEvent = async () => {
+    const result = await Swal.fire({
+      title: 'Emin misiniz?',
+      text: 'Bu etkinlikten çıkmak istediğinize emin misiniz?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Evet, çık',
+      cancelButtonText: 'İptal',
+      confirmButtonColor: '#d33',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await axiosInstance.post('/Event/LeaveEvent', { 
+          eventId: eventId 
+        });
+
+        if (response.data.success) {
+          await fetchCurrentEvents();
+          await Swal.fire({
+            title: 'Başarılı!',
+            text: 'Etkinlikten başarıyla çıkış yapıldı',
+            icon: 'success',
+            timer: 1500
+          });
+          navigate('/home');
+        } else {
+          throw new Error(response.data.message || 'Çıkış yapılamadı');
+        }
+      } catch (error) {
+        console.error('Etkinlikten çıkış hatası:', error);
+        await Swal.fire({
+          title: 'Hata!',
+          text: 'Etkinlikten çıkış yapılırken bir hata oluştu',
+          icon: 'error'
+        });
+      }
+    }
+  };
+
   if (isLoading || !event) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -115,8 +157,7 @@ const EventDetailPage = () => {
                   <img
                     src={event.image}
                     alt={event.name}
-                    className="w-full h-[400px] object-cover cursor-zoom-in"
-                    onClick={() => setIsModalOpen(true)}
+                    className="w-full h-[400px] object-cover"
                   />
                   <div className="absolute top-4 right-4 flex gap-2">
                     <Button
@@ -140,7 +181,16 @@ const EventDetailPage = () => {
               
               <div className="p-6 space-y-6">
                 <div>
-                  <Badge className="mb-2">Aktif Etkinlik</Badge>
+                  <div className="flex justify-between items-center mb-2">
+                    <Badge className="mb-2">Aktif Etkinlik</Badge>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={handleLeaveEvent}
+                    >
+                      Etkinlikten Çık
+                    </Button>
+                  </div>
                   <h1 className="text-3xl font-bold text-gray-800">{event.name}</h1>
                 </div>
 
@@ -178,34 +228,6 @@ const EventDetailPage = () => {
           </div>
         </div>
 
-        {/* Lightbox Modal */}
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogOverlay className="fixed inset-0 bg-black/80 backdrop-blur-sm" />
-          <DialogContent className="fixed inset-0 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="relative max-w-screen-xl mx-auto"
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-4 right-4 text-white hover:bg-white/20"
-                onClick={() => setIsModalOpen(false)}
-              >
-                <X className="h-6 w-6" />
-              </Button>
-              <img
-                src={event.image}
-                alt={event.name}
-                className="max-w-full max-h-[90vh] object-contain rounded-lg"
-              />
-            </motion.div>
-          </DialogContent>
-        </Dialog>
-
         <Card className="mt-6">
           <CardContent className="p-6">
             <h3 className="text-xl font-semibold mb-4">Konum ve Rota Bilgileri</h3>
@@ -237,10 +259,19 @@ const EventDetailPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Yürüyüş Rotası */}
                   {routeInfo.walkingRoute && (
-                    <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-lg">
+                    <div className={`flex items-start gap-4 p-4 rounded-lg ${
+                      routeInfo.walkingRoute.recommended 
+                        ? 'bg-primary/10 border-2 border-primary' 
+                        : 'bg-muted/50'
+                    }`}>
                       <MapPin className="w-5 h-5 mt-1 text-primary" />
                       <div>
-                        <h4 className="font-medium">Yürüyerek</h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">Yürüyerek</h4>
+                          {routeInfo.walkingRoute.recommended && (
+                            <Badge variant="secondary">Önerilen</Badge>
+                          )}
+                        </div>
                         <p className="text-muted-foreground">
                           {routeInfo.walkingRoute.distance} - {routeInfo.walkingRoute.duration}
                         </p>
@@ -250,10 +281,19 @@ const EventDetailPage = () => {
 
                   {/* Araç Rotası */}
                   {routeInfo.drivingRoute && (
-                    <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-lg">
+                    <div className={`flex items-start gap-4 p-4 rounded-lg ${
+                      routeInfo.drivingRoute.recommended 
+                        ? 'bg-primary/10 border-2 border-primary' 
+                        : 'bg-muted/50'
+                    }`}>
                       <Car className="w-5 h-5 mt-1 text-primary" />
                       <div>
-                        <h4 className="font-medium">Araçla</h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">Araçla</h4>
+                          {routeInfo.drivingRoute.recommended && (
+                            <Badge variant="secondary">Önerilen</Badge>
+                          )}
+                        </div>
                         <p className="text-muted-foreground">
                           {routeInfo.drivingRoute.distance} - {routeInfo.drivingRoute.duration}
                         </p>

@@ -1,13 +1,21 @@
 import { useEffect, useState } from 'react';
 import * as signalR from '@microsoft/signalr';
 
+interface Notification {
+  id: string;
+  message: string;
+  link: string;
+  createdAt: string;
+  isRead: boolean;
+}
+
 export function useSignalRNotifications(hubUrl: string) {
-  const [notifications, setNotifications] = useState<string[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(hubUrl, {
-        accessTokenFactory: () => localStorage.getItem("AccessToken") || "", // JWT'yi ekle
+        accessTokenFactory: () => localStorage.getItem("AccessToken") || "",
       })
       .configureLogging(signalR.LogLevel.Information)
       .withAutomaticReconnect()
@@ -17,15 +25,20 @@ export function useSignalRNotifications(hubUrl: string) {
       .then(() => {
         console.log('SignalR connected.');
 
-        // Sunucudan bildirim alındığında
-        connection.on('ReceiveNotification', (message: string) => {
-          console.log("Message received from SignalR:", message); //Burada get request atsın
-          setNotifications((prev) => [...prev, message]);
+        connection.on('ReceiveNotification', (notification: Notification) => {
+          console.log("New notification received:", notification);
+          setNotifications(prev => {
+            if (prev.some(n => n.id === notification.id)) {
+              return prev;
+            }
+            return [...prev, notification];
+          });
         });
       })
       .catch((err) => console.error('SignalR connection failed: ', err));
 
     return () => {
+      setNotifications([]);
       connection.stop().then(() => console.log('SignalR disconnected.'));
     };
   }, [hubUrl]);

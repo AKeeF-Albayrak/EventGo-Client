@@ -258,17 +258,17 @@ export default function CreateEventPage() {
   minDate.setHours(0, 0, 0, 0)
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
         <h1 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
           Yeni Etkinlik Oluştur
         </h1>
 
-        <motion.form onSubmit={handleSubmit} className="space-y-8">
+        <motion.form onSubmit={handleSubmit} className="space-y-6">
           {/* Resim ve Temel Bilgiler Grid */}
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-6">
             {/* Sol Kolon - Resim */}
-            <motion.div variants={itemVariants} className="space-y-4">
+            <motion.div variants={itemVariants} className="space-y-4 h-full flex flex-col justify-center">
               <ImageUpload
                 currentImage={previewUrl}
                 onImageChange={(file) => {
@@ -285,7 +285,7 @@ export default function CreateEventPage() {
             </motion.div>
 
             {/* Sağ Kolon - Temel Bilgiler */}
-            <motion.div variants={itemVariants} className="space-y-6">
+            <motion.div variants={itemVariants} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-base font-medium">Etkinlik Adı</Label>
                 <Input
@@ -387,7 +387,7 @@ export default function CreateEventPage() {
             <Textarea
               id="description"
               placeholder="Etkinliğinizi detaylı bir şekilde anlatın"
-              className="min-h-[120px] resize-none"
+              className="min-h-[150px] resize-none"
               value={eventData.description}
               onChange={(e) => setEventData(prev => ({ ...prev, description: e.target.value }))}
               required
@@ -395,7 +395,7 @@ export default function CreateEventPage() {
           </motion.div>
 
           {/* Harita Alanı */}
-          <motion.div variants={itemVariants} className="space-y-4">
+          <motion.div variants={itemVariants} className="space-y-3">
             <Label className="text-base font-medium">Konum Seçin</Label>
             <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
               {isLoaded ? (
@@ -439,7 +439,7 @@ export default function CreateEventPage() {
           </motion.div>
 
           {/* Adres Bilgileri */}
-          <motion.div variants={itemVariants} className="grid md:grid-cols-3 gap-4">
+          <motion.div variants={itemVariants} className="grid md:grid-cols-3 gap-4 mt-4">
             <div className="space-y-2">
               <Label htmlFor="address" className="text-base font-medium">Adres</Label>
               <Input
@@ -470,10 +470,10 @@ export default function CreateEventPage() {
           </motion.div>
 
           {/* Submit Button */}
-          <motion.div variants={itemVariants} className="pt-4">
+          <motion.div variants={itemVariants} className="pt-6">
             <Button
               type="submit"
-              className="w-full h-12 text-lg font-semibold"
+              className="w-full h-12 text-lg font-semibold rounded-xl"
               disabled={isLoading || !isFormValid()}
             >
               {isLoading ? (

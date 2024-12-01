@@ -3,12 +3,15 @@ interface RouteResponse {
     duration: string;
     distance: string;
     steps: string[];
+    recommended: boolean;
   };
   drivingRoute: {
     duration: string;
     distance: string;
     steps: string[];
+    recommended: boolean;
   };
+  recommendedMode: 'WALK' | 'DRIVE';
 }
 
 export async function getRouteInfo(
@@ -104,21 +107,35 @@ export async function getRouteInfo(
       return `${meters} metre`;
     };
 
+    // Mesafe ve süre hesaplamaları
+    const walkingDistanceMeters = walkingData.routes[0].distanceMeters || 0;
+    const walkingDurationSeconds = Number(walkingData.routes[0].duration?.slice(0, -1)) || 0;
+    const drivingDistanceMeters = drivingData.routes[0].distanceMeters || 0;
+    const drivingDurationSeconds = Number(drivingData.routes[0].duration?.slice(0, -1)) || 0;
+
+    // Rota önerisi için mantık
+    // - 2 km'den kısa mesafeler için yürüyüş
+    // - 2 km'den uzun mesafeler için araç önerilir
+    const recommendedMode = walkingDistanceMeters <= 2000 ? 'WALK' : 'DRIVE';
+
     return {
       walkingRoute: {
-        duration: formatDuration(Number(walkingData.routes[0].duration?.slice(0, -1)) || 0),
-        distance: formatDistance(walkingData.routes[0].distanceMeters || 0),
+        duration: formatDuration(walkingDurationSeconds),
+        distance: formatDistance(walkingDistanceMeters),
         steps: walkingData.routes[0].legs?.[0]?.steps?.map(
           (step: any) => step.navigationInstruction?.instructions
         ) || [],
+        recommended: recommendedMode === 'WALK'
       },
       drivingRoute: {
-        duration: formatDuration(Number(drivingData.routes[0].duration?.slice(0, -1)) || 0),
-        distance: formatDistance(drivingData.routes[0].distanceMeters || 0),
+        duration: formatDuration(drivingDurationSeconds),
+        distance: formatDistance(drivingDistanceMeters),
         steps: drivingData.routes[0].legs?.[0]?.steps?.map(
           (step: any) => step.navigationInstruction?.instructions
         ) || [],
+        recommended: recommendedMode === 'DRIVE'
       },
+      recommendedMode
     };
   } catch (error) {
     console.error('Rota hesaplama hatası:', error);

@@ -31,6 +31,8 @@ interface EventContextType {
   deleteEvent: (eventId: string) => Promise<void>;
   joinEvent: (eventId: string) => Promise<void>;
   leaveEvent: (eventId: string) => Promise<void>;
+  createdEvents: Event[];
+  fetchCreatedEvents: () => Promise<void>;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
@@ -48,6 +50,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [userEvents, setUserEvents] = useState<Event[]>([]);
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [createdEvents, setCreatedEvents] = useState<Event[]>([]);
 
   const fetchCurrentEvents = async () => {
     try {
@@ -219,6 +222,27 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const fetchCreatedEvents = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.get('/Event/GetUsersCreatedEvents');
+      if (response.data.success) {
+        const eventsWithImages = response.data.events.map((event: Event) => ({
+          ...event,
+          image: event.image ? `data:image/jpeg;base64,${event.image}` : null
+        }));
+        setCreatedEvents(eventsWithImages);
+      } else {
+        throw new Error(response.data.message);
+      }
+    } catch (error) {
+      console.error('Oluşturulan etkinlikler yüklenirken hata:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <EventContext.Provider value={{
       events,
@@ -232,7 +256,9 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       updateEvent,
       deleteEvent,
       joinEvent,
-      leaveEvent
+      leaveEvent,
+      createdEvents,
+      fetchCreatedEvents
     }}>
       {children}
     </EventContext.Provider>

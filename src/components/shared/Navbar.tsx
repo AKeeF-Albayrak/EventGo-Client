@@ -15,10 +15,19 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import Swal from 'sweetalert2';
 import { useSignalRNotifications } from '@/hooks/useSignalRNotifications';
+import axiosInstance from '@/contexts/AxiosInstance';
 
+interface Notification {
+  id: string;
+  message: string;
+  link: string;
+  createdAt: string;
+  isRead: boolean;
+  isDeleted: boolean;
+}
 
 export default function Navbar() {
-  const [notifications, setNotifications] = React.useState<string[]>([]);
+  const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -27,7 +36,11 @@ export default function Navbar() {
 
   React.useEffect(() => {
     if (newNotifications.length > 0) {
-      setNotifications((prev) => [...prev, ...newNotifications]);
+      setNotifications(prev => {
+        const existingIds = new Set(prev.map(n => n.id));
+        const uniqueNewNotifications = newNotifications.filter(n => !existingIds.has(n.id));
+        return [...prev, ...uniqueNewNotifications];
+      });
     }
   }, [newNotifications]);
 
@@ -59,6 +72,71 @@ export default function Navbar() {
           'success'
         );
       }
+    });
+  };
+
+  // Bildirimleri yükle
+  React.useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await axiosInstance.get('/Users/GetNotifications');
+        if (response.data.success) {
+          // Sadece silinmemiş bildirimleri göster
+          const activeNotifications = response.data.notifications.filter(
+            (n: Notification) => !n.isDeleted
+          );
+          setNotifications(activeNotifications);
+        }
+      } catch (error) {
+        console.error('Bildirimler alınamadı:', error);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  // Bildirimi sil fonksiyonu (markAsRead yerine)
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      const response = await axiosInstance.delete('/Users/DeleteNotifications', {
+        data: { 
+          id: notificationId,
+          permanentDelete: true // Backend'e kalıcı silme işareti gönder
+        }
+      });
+      
+      if (response.data.success) {
+        setNotifications(prev => prev.filter(n => n.id !== notificationId));
+        console.log('Bildirim kalıcı olarak silindi:', notificationId);
+      } else {
+        console.error('Bildirim silme başarısız:', response.data);
+      }
+    } catch (error) {
+      console.error('Bildirim silinemedi:', error);
+    }
+  };
+
+  // Tarih formatlama yardımcı fonksiyonu ekleyelim
+  const formatNotificationDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return "Az önce";
+    if (diffInMinutes < 60) return `${diffInMinutes} dakika önce`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} saat önce`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays} gün önce`;
+    
+    return date.toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
@@ -95,25 +173,64 @@ export default function Navbar() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-4 w-4" />
-                {notifications > 0 && (
+                {notifications.filter(n => !n.isRead).length > 0 && (
                   <Badge
                     variant="destructive"
-                    className="absolute -right-1 -top-1 h-4 w-4 text-xs"
+                    className="absolute -right-1 -top-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
                   >
-                    {notifications}
+                    {notifications.filter(n => !n.isRead).length}
                   </Badge>
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Bildirimler</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-96 max-h-[32rem] overflow-y-auto">
+              <DropdownMenuLabel className="flex justify-between items-center py-2">
+                <span>Bildirimler</span>
+                {notifications.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {notifications.filter(n => !n.isRead).length} okunmamış
+                  </span>
+                )}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Link to="/events/1">Yeni yazılım etkinliği bildirimi</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link to="/events/2">Yeni spor etkinliği bildirimi</Link>
-              </DropdownMenuItem>
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <DropdownMenuItem 
+                    key={notification.id} 
+                    className={`flex flex-col items-start p-3 hover:bg-gray-100 ${!notification.isRead ? 'bg-blue-50' : ''}`}
+                  >
+                    <div className="flex justify-between w-full gap-2">
+                      <Link 
+                        to={notification.link} 
+                        className="flex-1 text-sm line-clamp-2 break-words"
+                      >
+                        {notification.message}
+                      </Link>
+                      {!notification.isRead && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="ml-2 h-6 px-2 text-xs shrink-0"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            deleteNotification(notification.id);
+                          }}
+                        >
+                          Sil
+                        </Button>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-500 mt-1">
+                      {formatNotificationDate(notification.createdAt)}
+                    </span>
+                  </DropdownMenuItem>
+                ))
+              ) : (
+                <DropdownMenuItem disabled className="text-center py-4">
+                  Bildirim bulunmamaktadır
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
 

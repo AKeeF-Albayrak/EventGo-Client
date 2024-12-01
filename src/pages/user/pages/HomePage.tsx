@@ -124,11 +124,7 @@ const HomePage = () => {
                       <div className="space-y-2 text-gray-600">
                         <div className="flex items-center">
                           <Calendar className="w-4 h-4 mr-2" />
-                          <span>{formattedDate}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Clock className="w-4 h-4 mr-2" />
-                          <span>{formattedTime}</span>
+                          <span>{formattedDate}, {formattedTime}</span>
                         </div>
                         <div className="flex items-center">
                           <Clock className="w-4 h-4 mr-2" />

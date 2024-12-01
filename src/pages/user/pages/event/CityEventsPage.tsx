@@ -28,11 +28,42 @@ const itemVariants = {
   }
 };
 
+const categoryNames = {
+  0: "Spor",
+  1: "Müzik",
+  2: "Sanat",
+  3: "Teknoloji",
+  4: "Bilim",
+  5: "Edebiyat",
+  6: "Sinema",
+  7: "Tiyatro",
+  8: "Fotoğrafçılık",
+  9: "Seyahat",
+  10: "Yemek",
+  11: "Dans",
+  12: "Yoga",
+  13: "Doğa",
+  14: "Tarih"
+};
+
+// Türkiye'deki illerin listesi
+const cities = [
+  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
+  "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli",
+  "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari",
+  "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
+  "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir",
+  "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat",
+  "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman",
+  "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
+].sort();
+
 export default function CityEventsPage() {
   const { allEvents, isLoading, fetchAllEvents } = useEvent();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [filteredEvents, setFilteredEvents] = useState([]);
+  const [selectedCity, setSelectedCity] = useState('');
 
   useEffect(() => {
     fetchAllEvents();
@@ -72,10 +103,14 @@ export default function CityEventsPage() {
         ? true 
         : event.category === parseInt(selectedCategory);
       
-      return matchesSearch && matchesCategory;
+      const matchesCity = !selectedCity || selectedCity === 'all'
+        ? true
+        : event.city === selectedCity;
+      
+      return matchesSearch && matchesCategory && matchesCity;
     });
     setFilteredEvents(filtered);
-  }, [searchTerm, selectedCategory, allEvents]);
+  }, [searchTerm, selectedCategory, selectedCity, allEvents]);
 
   return (
     <motion.div
@@ -100,6 +135,20 @@ export default function CityEventsPage() {
             </div>
           </div>
           
+          <div className="w-full md:w-48">
+            <Select onValueChange={setSelectedCity} value={selectedCity}>
+              <SelectTrigger>
+                <SelectValue placeholder="Şehir" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Şehirler</SelectItem>
+                {cities.map(city => (
+                  <SelectItem key={city} value={city}>{city}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="w-full md:w-48">
             <Select onValueChange={setSelectedCategory} value={selectedCategory}>
               <SelectTrigger>
@@ -140,7 +189,7 @@ export default function CityEventsPage() {
           {filteredEvents.map((event) => (
             <motion.div
               key={event.id}
-              className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
+              className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col"
               variants={itemVariants}
               whileHover={{ y: -5 }}
             >
@@ -152,35 +201,37 @@ export default function CityEventsPage() {
                   e.currentTarget.src = concertImage;
                 }}
               />
-              <div className="p-6">
-                <h3 className="text-xl font-semibold mb-3">{event.name}</h3>
-                <p className="text-gray-600 mb-4 line-clamp-2">{event.description}</p>
-                
-                <div className="space-y-2 text-gray-600">
-                  <div className="flex items-center">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    <span>{new Date(event.date).toLocaleDateString('tr-TR')}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="w-4 h-4 mr-2" />
-                    <span>{event.duration} dakika</span>
-                  </div>
-                  <div className="flex items-center">
-                    <MapPin className="w-4 h-4 mr-2" />
-                    <span>{event.address}</span>
+              <div className="p-6 flex flex-col flex-grow">
+                <div className="flex-grow">
+                  <h3 className="text-xl font-semibold mb-3">{event.name}</h3>
+                  <p className="text-gray-600 mb-4 line-clamp-2">{event.description}</p>
+                  
+                  <div className="space-y-2 text-gray-600">
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      <span>
+                        {new Date(event.date).toLocaleDateString('tr-TR')}, {new Date(event.date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-2" />
+                      <span>{event.duration} dakika</span>
+                    </div>
+                    <div className="flex items-center">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      <span>{event.city}, {event.country}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Filter className="w-4 h-4 mr-2" />
+                      <span>{categoryNames[event.category]}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-4 flex justify-between items-center">
-                  <Link 
-                    to={`/events/${event.id}`}
-                    className="text-purple-600 hover:text-purple-700 font-medium"
-                  >
-                    Detaylar
-                  </Link>
+                <div className="mt-4">
                   <Button
                     onClick={() => handleJoinEvent(event.id)}
-                    className="bg-purple-500 hover:bg-purple-600"
+                    className="bg-purple-500 hover:bg-purple-600 w-full"
                   >
                     Katıl
                   </Button>
