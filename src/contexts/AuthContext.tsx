@@ -28,6 +28,16 @@ interface AuthContextType {
   sendResetEmail: (email: string) => Promise<void>;
   verifyResetCode: (email: string, code: string) => Promise<void>;
   updatePassword: (email: string, newPassword: string) => Promise<void>;
+  updateUser: (userData: {
+    name: string;
+    surname: string;
+    email: string;
+    phoneNumber: string;
+    address: string;
+    city: string;
+    country: string;
+    image?: string | null;
+  }) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -134,6 +144,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateUser = async (userData: {
+    name: string;
+    surname: string;
+    email: string;
+    phoneNumber: string;
+    address: string;
+    city: string;
+    country: string;
+    image?: string | null;
+  }) => {
+    try {
+      const response = await axiosInstance.put('/Users/UpdateUser', {
+        Id: user?.id,
+        Email: userData.email,
+        Address: userData.address,
+        City: userData.city,
+        Country: userData.country,
+        Name: userData.name,
+        Surname: userData.surname,
+        PhoneNumber: userData.phoneNumber,
+        Image: userData.image,
+        Username: user?.username,
+        Interests: user?.interests || [],
+        PasswordHash: user?.passwordHash,
+        Role: user?.role,
+        BirthDate: user?.birthDate,
+        Gender: user?.gender,
+        Latitude: user?.latitude || 0,
+        Longitude: user?.longitude || 0
+      });
+
+      if (response.data) {
+        const updatedUser = {
+          ...user,
+          ...userData
+        };
+        setUser(updatedUser);
+        localStorage.setItem('User', JSON.stringify(updatedUser));
+      }
+    } catch (error) {
+      console.error('Kullanıcı güncelleme hatası:', error);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -144,7 +199,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoading,
       sendResetEmail,
       verifyResetCode,
-      updatePassword
+      updatePassword,
+      updateUser
     }}>
       {children}
     </AuthContext.Provider>

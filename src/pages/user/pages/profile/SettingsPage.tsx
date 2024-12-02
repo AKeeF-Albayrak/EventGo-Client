@@ -5,53 +5,71 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { toast } from 'sonner'
+import { ImageUpload } from '@/pages/admin/Content/ImageUpload'
+import Swal from 'sweetalert2'
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: user?.name || '',
+    surname: user?.surname || '',
     email: user?.email || '',
-    image: null as File | null,
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+    phoneNumber: user?.phoneNumber || '',
+    address: user?.address || '',
+    city: user?.city || '',
+    country: user?.country || '',
+    image: user?.image || null,
   })
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData(prev => ({ ...prev, image: e.target.files![0] }))
+  const handleImageChange = (imageBase64: string) => {
+    if (imageBase64) {
+      const base64Data = imageBase64.split(',')[1];
+      setFormData(prev => ({ ...prev, image: base64Data }));
+    } else {
+      setFormData(prev => ({ ...prev, image: null }));
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
 
-    try {
-      if (formData.newPassword !== formData.confirmPassword) {
-        toast.error('Yeni şifreler eşleşmiyor')
-        return
-      }
+    // Onay dialogu göster
+    const result = await Swal.fire({
+      title: 'Profil Güncellemesi',
+      text: 'Profil bilgilerinizi güncellemek istediğinizden emin misiniz?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Evet, Güncelle',
+      cancelButtonText: 'İptal',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33'
+    });
 
-      const updateData = new FormData()
-      updateData.append('name', formData.name)
-      updateData.append('email', formData.email)
-      if (formData.image) {
-        updateData.append('image', formData.image)
+    if (result.isConfirmed) {
+      setIsLoading(true)
+      try {
+        await updateUser(formData)
+        
+        // Başarılı güncelleme mesajı
+        await Swal.fire({
+          title: 'Başarılı!',
+          text: 'Profil bilgileriniz başarıyla güncellendi.',
+          icon: 'success',
+          confirmButtonText: 'Tamam'
+        });
+      } catch (error) {
+        // Hata mesajı
+        await Swal.fire({
+          title: 'Hata!',
+          text: 'Profil güncellenirken bir hata oluştu.',
+          icon: 'error',
+          confirmButtonText: 'Tamam'
+        });
+        console.error('Güncelleme hatası:', error)
+      } finally {
+        setIsLoading(false)
       }
-      if (formData.currentPassword && formData.newPassword) {
-        updateData.append('currentPassword', formData.currentPassword)
-        updateData.append('newPassword', formData.newPassword)
-      }
-
-      await updateUser(updateData)
-      toast.success('Profil başarıyla güncellendi')
-    } catch (error) {
-      toast.error('Profil güncellenirken bir hata oluştu')
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -71,12 +89,10 @@ export default function SettingsPage() {
                 />
                 <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
-              <div>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="cursor-pointer"
+              <div className="flex-1">
+                <ImageUpload
+                  currentImage={user?.image ? `data:image/jpeg;base64,${user.image}` : ''}
+                  onImageChange={handleImageChange}
                 />
                 <p className="text-sm text-muted-foreground mt-1">
                   PNG, JPG veya GIF (max. 2MB)
@@ -85,13 +101,23 @@ export default function SettingsPage() {
             </div>
 
             <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Ad Soyad</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Ad</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="surname">Soyad</Label>
+                  <Input
+                    id="surname"
+                    value={formData.surname}
+                    onChange={(e) => setFormData(prev => ({ ...prev, surname: e.target.value }))}
+                  />
+                </div>
               </div>
 
               <div className="grid gap-2">
@@ -103,38 +129,42 @@ export default function SettingsPage() {
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 />
               </div>
-            </div>
 
-            <div className="grid gap-4">
-              <h3 className="text-lg font-medium">Şifre Değiştir</h3>
               <div className="grid gap-2">
-                <Label htmlFor="currentPassword">Mevcut Şifre</Label>
+                <Label htmlFor="phoneNumber">Telefon Numarası</Label>
                 <Input
-                  id="currentPassword"
-                  type="password"
-                  value={formData.currentPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                  id="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
                 />
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="newPassword">Yeni Şifre</Label>
+                <Label htmlFor="address">Adres</Label>
                 <Input
-                  id="newPassword"
-                  type="password"
-                  value={formData.newPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
                 />
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="confirmPassword">Yeni Şifre (Tekrar)</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="city">Şehir</Label>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="country">Ülke</Label>
+                  <Input
+                    id="country"
+                    value={formData.country}
+                    onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
+                  />
+                </div>
               </div>
             </div>
 
