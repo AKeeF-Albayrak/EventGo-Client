@@ -1,50 +1,91 @@
-# React + TypeScript + Vite
+# EventGo-Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+EventGo-Client is a client-side application built with React, TypeScript, and Vite. This project aims to provide a robust and efficient user interface for event management.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React & TypeScript**: Utilizes React for building user interfaces and TypeScript for type safety.
+- **Vite**: Fast build tool and development server.
+- **Authentication**: Includes authentication flows such as login, registration, and password reset.
+- **State Management**: Uses context and hooks for managing application state.
+- **Form Handling**: Implements various forms with validation and user feedback using `react-toastify`.
 
-## Expanding the ESLint configuration
+## Project Structure
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```plaintext
+src/
+├── components/      # Reusable UI components
+├── contexts/        # Context providers for state management
+├── hooks/           # Custom hooks
+├── pages/           # Main application pages
+├── AppRoutes.tsx    # Application routing
+├── main.tsx         # Main entry point
+└── index.css        # Global styles
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## Getting Started
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+### Prerequisites
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+- Node.js (>= 14.x)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/MerttMetinn/EventGo-Client.git
+cd EventGo-Client
 ```
+
+2. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+### Running the Development Server
+
+Start the development server with Vite:
+
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+The application will be available at `http://localhost:3000`.
+
+### Building for Production
+
+Build the application for production:
+
+```bash
+npm run build
+# or
+yarn build
+```
+
+### Linting and Formatting
+
+Lint and format the code:
+
+```bash
+npm run lint
+# or
+yarn lint
+```
+
+## Contributing
+
+Contributions are welcome! Please fork the repository and create a pull request with your changes.
+
+## License
+
+This project is licensed under the MIT License.
+```
+
+Feel free to customize this README further based on specific details and additional features of your project.
